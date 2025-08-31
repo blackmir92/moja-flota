@@ -3,7 +3,11 @@ require('./reminderScheduler');
 const bodyParser = require('body-parser');
 const db = require('./db');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 
 const session = require('express-session');
