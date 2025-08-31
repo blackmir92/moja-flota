@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<title>Moje Samochody - Podgląd i edycja</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #a7a8b4, #d0d1d6);
+  min-height: 100vh;
+  color: #1c1c1c;
+}
+
+/* Nagłówki */
+h2 {
+  margin-bottom: 18px;
+  color: #222;
+  font-size: 1.6em;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+h3 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Container */
+#main-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  gap: 12px;
+  padding: 12px;
+}
+
+/* Lewa kolumna */
+#vehicleList {
+  width: 25%;
+  padding: 20px;
+  overflow-y: auto;
+  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+#vehicleList h2 {
+  font-size: 1.3em;
+  text-align: center;
+  font-weight: 700;
+}
+
+#vehicleList select,
+#vehicleList a {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #222;
+  background: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255,255,255,0.4);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+#vehicleList a {
+  display: block;
+  color: #fff;
+}
+#vehicleList a:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+#vehicleList select {
+  color: #333;
+  font-weight: 500;
+}
+
+/* przycisk dodawania zdarzeń */
+#addMileageBtn {
+  background-color: #1565C0;
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#addMileageBtn:hover {
+  background-color: #0D47A1;
+}
+
+/* Vehicle Card */
+.vehicle-card {
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(18px) saturate(180%);
+  border-radius: 22px;
+  padding: 14px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+.vehicle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+}
+.vehicle-card img {
+  width: 100%;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  object-fit: cover;
+  height: 150px;
+}
+.vehicle-card strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+.vehicle-card .vehicle-garage {
+  font-size: 0.9em;
+  color: #555;
+}
+.vehicle-card button {
+  margin-top: 6px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.35);
+  color: #222;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.vehicle-card button:hover {
+  background: rgba(255,255,255,0.55);
+}
+
+/* Prawa kolumna */
+#vehicle-details-container {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+/* Vehicle form */
+.vehicle-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.vehicle-form-left {
+  flex: 1 1 50%;
+}
+/* Prawa kolumna ze zdjęciem */
+.vehicle-form-right {
+  flex: 0 0 39%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(18px);
+
+  /* Maksymalna wysokość = wysokość sekcji danych pojazdu */
+  max-height: fit-content; /* elastyczna, nie większa niż zawartość */
+}
+
+/* Obrazek wypełnia kontener */
+.vehicle-form-right img {
+  width: 100%;
+  max-height: 100%;   /* nigdy nie wychodzi poza kontener */
+  object-fit: cover;  /* wypełnia kontener proporcjonalnie */
+  border-radius: 18px;
+}
+
+/* Sekcje info */
+.vehicle-main-info {
+  background: rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 22px;
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
+}
+
+.vehicle-main-info label {
+  display: block;
+  margin-top: 12px;
+  font-weight: 600;
+  color: #222;
+  font-size: 0.95em;
+}
+.vehicle-main-info input,
+.vehicle-main-info select,
+.vehicle-main-info textarea {
+  width: 100%;
+  padding: 11px 13px;
+  margin-top: 6px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255,255,255,0.35);
+  color: #1c1c1c;
+  font-size: 0.95em;
+  outline: none;
+  transition: background 0.25s;
+}
+.vehicle-main-info input:focus,
+.vehicle-main-info select:focus,
+.vehicle-main-info textarea:focus {
+  background: rgba(255,255,255,0.55);
+}
+
+/* iOS green buttons */
+.ios-green-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 220px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(180deg, #6de07a 0%, #34c759 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  text-shadow: 0 1px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 20px rgba(52,199,89,0.18), inset 0 -2px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  margin-top: 16px;
+}
+.ios-green-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(52,199,89,0.20);
+  opacity: 0.99;
+}
+.ios-green-btn:active {
+  transform: translateY(-1px) scale(0.997);
+  box-shadow: 0 6px 16px rgba(52,199,89,0.14);
+}
+.ios-green-btn:focus {
+  outline: none;
+  box-shadow: 0 10px 24px rgba(52,199,89,0.18), 0 0 0 6px rgba(52,199,89,0.10);
+}
+
+/* Kontener dla dwóch przycisków */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.btn-row .ios-green-btn {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+#saveButton {
+  margin-top: 18px;
+  background: linear-gradient(135deg, #4caf50, #43a047);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1em;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+#saveButton:hover {
+  background: linear-gradient(135deg, #43a047, #388e3c);
+  transform: translateY(-2px);
+}
+
+.countdown {
+  font-size: 0.9em;
+  color: #444;
+  margin-left: 8px;
+}
+.error-msg {
+  color: #e53935;
+  font-weight: bold;
+  margin-top: 10px;
+}
+.vehicle-form-dates,
+.vehicle-form-events {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
+}
+
+.vehicle-form-dates label,
+.vehicle-form-events label {
+  display: block;
+  margin-top: 12px;
+  font-weight: 600;
+  color: #222;
+  font-size: 0.95em;
+}
+
+.vehicle-form-dates input,
+.vehicle-form-dates select,
+.vehicle-form-events input,
+.vehicle-form-events select {
+  width: 100%;
+  padding: 11px 13px;
+  margin-top: 6px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255,255,255,0.35);
+  color: #1c1c1c;
+  font-size: 0.95em;
+  outline: none;
+  transition: background 0.25s;
+}
+.vehicle-form-dates input:focus,
+.vehicle-form-dates select:focus,
+.vehicle-form-events input:focus,
+.vehicle-form-events select:focus {
+  background: rgba(255,255,255,0.55);
+}
+
+/* Event row - data i przebieg na jednej wysokości */
+.vehicle-form-events .event-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.vehicle-form-events .event-row input {
+  flex: 1;
+  padding: 11px 13px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255,255,255,0.35);
+  font-size: 0.95em;
+  outline: none;
+  transition: background 0.25s;
+}
+.vehicle-form-events .event-row input:focus {
+  background: rgba(255,255,255,0.55);
+}
+
+/* Pole czynności pod nimi */
+.vehicle-form-events .event-field {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255,255,255,0.35);
+  font-size: 0.95em;
+  margin-bottom: 8px;
+  outline: none;
+  transition: background 0.25s;
+}
+.vehicle-form-events .event-field:focus {
+  background: rgba(255,255,255,0.55);
+}
+
+/* Tabela przebiegów */
+#mileageTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+#mileageTable th,
+#mileageTable td {
+  padding: 10px;
+  text-align: left;
+  font-size: 0.9em;
+}
+#mileageTable th {
+  background: rgba(60, 60, 60, 0.7);
+  color: #fff;
+  font-weight: 600;
+}
+#mileageTable td {
+  background: rgba(255,255,255,0.25);
+  color: #111;
+  backdrop-filter: blur(8px);
+}
+
+/* Top nav */
+.top-nav {
+  display: flex;
+  justify-content: flex-start;
+  gap: 24px;
+  padding: 14px 22px;
+  background: rgba(40,40,40,0.8);
+  backdrop-filter: blur(15px);
+  border-radius: 0 0 18px 18px;
+}
+.top-nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95em;
+}
+.top-nav a:hover {
+  text-decoration: underline;
+}
+
+/* Alert banner */
+.alert-banner {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #ffeeba;
+}
+</style>
+</head>
+<body>
+    <div style="background-color: #7a7878; padding: 10px; text-align: center; font-weight: bold; color: white;">
+    <div style="background-color: #7a7878; padding: 10px; text-align: center; font-weight: bold; color: white;">
+  📰 Aktualności
+  <% if (alerts.length === 0) { %>
+    <div style="font-weight: normal;">(Brak nadchodzących terminów)</div>
+  <% } else { %>
+    <div style="font-weight: normal;">
+      <% alerts.forEach(msg => { %>
+        <div><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+<div class="alert-banner">
+  Drodzy użytkownicy. Jest to wersja testowa. Baza danych będzie backupowana raz w tygodniu. 
+  Proszę nie podawać informacji wrażliwych jak numery dokumentów, PESEL itp., ponieważ profesjonalne cybersecurity mam na kolejnej lekcji. 
+  W razie problemów/błędów/pomysłów proszę o info na maila <a href="mailto:tomczyk.wroc@gmail.com">tomczyk.wroc@gmail.com</a> Kuba
+</div>
+</div>
+
+<div id="main-container">
+  <!-- Lewa kolumna -->
+  <div id="vehicleList">
+    <h2>🅿️ Lista pojazdów 🅿️</h2>
+
+
+    <a href="/add" style="background: #4CAF50;">➕ Dodaj nowy pojazd</a>
+    <select id="garageFilter">
+      <option value="">Pokaż wszystkie garaże</option>
+      <% garages.forEach(function(garage) { %>
+        <option value="<%= garage %>"><%= garage %></option>
+      <% }); %>
+    </select>
+
+
+    <% vehicles.forEach(vehicle => { %>
+      <div id="vehicle-card-<%= vehicle.id %>" class="vehicle-card" data-garage="<%= vehicle.garage %>" data-id="<%= vehicle.id %>">
+        <img src="<%= vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/uploads/fred.jpg' %>" alt="Zdjęcie pojazdu">
+        <strong><%= vehicle.brand %> <%= vehicle.model %></strong>
+        <span class="vehicle-garage">Garaż: <%= vehicle.garage %></span>
+        <button class="vehicle-button" data-id="<%= vehicle.id %>">Wyświetl szczegóły pojazdu</button>
+      </div>
+    <% }) %>
+        <a href="/export/excel" style="background: #2196F3;">📊 Eksport do Excel</a>
+    <a href="/export/pdf" style="background: #f44336;">📄 Eksport do PDF</a>
+  </div>
+
+  <!-- Prawa kolumna -->
+  <div id="vehicle-details-container">
+
+    <div id="vehicle-details">
+      <p>Wybierz pojazd z listy, aby zobaczyć szczegóły.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+    let currentVehicleId = null;
+
+    function calculateDaysLeft(dateStr) {
+      if (!dateStr) return '';
+      const today = new Date();
+      const target = new Date(dateStr);
+      const diffTime = target - today;
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return days >= 0
+        ? `(pozostało ${days} dni)`
+        : `(po terminie ${-days} dni)`;
+    }
+
+    // Załaduj dane pojazdu i wyświetl je w formularzu edycji
+    function loadVehicleDetails(id) {
+      currentVehicleId = id;
+      fetch(`/vehicle-data/${id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error('Nie udało się pobrać danych pojazdu.');
+          return res.json();
+        })
+        .then((vehicle) => {
+          if (!vehicle || !vehicle.id) throw new Error('Nieprawidłowy obiekt pojazdu.');
+
+          const garages = <%- JSON.stringify(garages) %>;
+          
+
+const html = `
+<div class="vehicle-form-container">
+
+  <!-- Lewa kolumna: formularz -->
+  <div class="vehicle-form-left">
+    <form id="vehicleForm">
+      <div class="vehicle-main-info">
+        <label for="brand">Marka:</label>
+        <input type="text" id="brand" name="brand" value="${vehicle.brand || ''}" required />
+
+        <label for="model">Model:</label>
+        <input type="text" id="model" name="model" value="${vehicle.model || ''}" required />
+
+        <label for="garage">Garaż:</label>
+        <input type="text" id="garage" name="garage" value="${vehicle.garage || ''}" required />
+
+        <label for="year">Rok produkcji:</label>
+        <input type="number" id="year" name="year" value="${vehicle.year || ''}" min="1900" max="2099" />
+
+        <label for="vin">VIN:</label>
+        <input type="text" id="vin" name="vin" value="${vehicle.vin || ''}" />
+
+        <label for="event">Numer rejestracyjny:</label>
+        <input type="text" id="event" name="event" value="${vehicle.event || ''}" />
+
+        <input type="hidden" id="mileage" name="mileage" value="${vehicle.mileage || ''}" />
+          <button type="button" class="ios-green-btn" onclick="saveVehicle('${vehicle.id}')">
+    💾 Zapisz dane pojazdu
+  </button>
+</form>
+
+
+      </div>
+
+      <!-- Daty (wewnątrz formularza) -->
+      <div class="vehicle-form-dates">
+        <label for="inspectionDate">Data przeglądu:</label>
+        <input type="date" id="inspectionDate" name="inspectionDate" value="${vehicle.inspectionDate || ''}" />
+        <span class="countdown">${calculateDaysLeft(vehicle.inspectionDate)}</span>
+
+        <label for="insuranceDate">Data ubezpieczenia:</label>
+        <input type="date" id="insuranceDate" name="insuranceDate" value="${vehicle.insuranceDate || ''}" />
+        <span class="countdown">${calculateDaysLeft(vehicle.insuranceDate)}</span>
+
+        <label for="policyNumber">Numer polisy:</label>
+        <input type="text" id="policyNumber" name="policyNumber" value="${vehicle.policyNumber || ''}" />
+
+        <label for="reminderEmail">📧 Email do przypomnień (10 dni przed terminem):</label>
+        <input type="email" id="reminderEmail" name="reminderEmail" value="${vehicle.reminderEmail || ''}" placeholder="np. jan.kowalski@example.com" />
+         <button type="button" class="ios-green-btn" onclick="saveReminders('${vehicle.id}')">
+    🔔 Aktualizuj przypomnienia
+  </button>
+
+
+
+      </div>
+
+
+    </form>
+  </div>
+
+  <!-- Prawa kolumna: zdjęcie + upload -->
+  <div class="vehicle-form-right">
+    <img src="${vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/uploads/fred.jpg'}" alt="Zdjęcie pojazdu">
+ <form id="uploadForm" style="margin-top: 12px; width: 100%; display: flex; flex-direction: column; gap: 8px;">
+  <input type="file" name="image" accept="image/*">
+  <button type="submit" style="width: 100%; padding: 10px; border: none; border-radius: 12px; background: #2196F3; color: white; font-weight: 600; cursor: pointer;">
+    📤 Prześlij zdjęcie
+  </button>
+</form>
+  </div>
+
+</div>
+
+<!-- Kontener na przebiegi i czynności (100% szerokości) -->
+<div class="vehicle-form-events">
+  <h3>Dodaj przebieg / czynność</h3>
+  <div class="event-row">
+    <input type="date" id="newEventDate" placeholder="Data" />
+    <input type="number" id="newMileage" placeholder="Przebieg (km)" min="1" />
+  </div>
+  <input type="text" id="newEvent" placeholder="Czynność (np. wymiana oleju)" class="event-field" />
+  <button id="addMileageBtn">➕ Dodaj zdarzenie</button>
+</div>
+
+  </div>
+
+  <h3>Historia przebiegów i czynności</h3>
+  <table id="mileageTable">
+    <thead>
+      <tr>
+        <th>Data czynności</th>
+        <th>Przebieg</th>
+        <th>Czynność</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+
+</div>
+  <form id="deleteForm" action="/delete/${vehicle.id}" method="POST" onsubmit="return confirm('Na pewno usunąć pojazd?');" style="margin-top: 20px;">
+    <button type="submit" style="background-color: #e74c3c; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+      🗑️ Usuń pojazd
+    </button>
+  </form>
+`;
+
+
+ document.getElementById('vehicle-details').innerHTML = html;
+
+// Przypisanie listenera do formularza po wstawieniu HTML
+const vehicleForm = document.getElementById('vehicleForm');
+if (vehicleForm) {
+  vehicleForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    saveVehicleChanges();
+  });
+}
+
+
+
+// Załaduj historię po wstawieniu HTML
+fetch(`/vehicle/${id}/mileage`)
+  .then(res => res.json())
+  .then(data => {
+    const tbody = document.querySelector('#mileageTable tbody');
+
+    // Wyczyść tbody, jeśli jest puste lub zawiera "Brak wpisów"
+    if (!tbody.innerHTML.trim() || tbody.querySelector('td')?.textContent === 'Brak wpisów') {
+        tbody.innerHTML = '';
+    }
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
+        return;
+    }
+
+    // Dodaj wpisy do tabeli
+    data.sort((a, b) => b.mileage - a.mileage);
+    data.forEach(item => {
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${item.eventDate}</td>
+                <td>${item.mileage} km</td>
+                <td>${item.event}</td>
+            </tr>
+        `);
+    });
+  })
+  .catch(err => console.error(err));
+
+
+// Obsługa dodawania przebiegu i czynności
+document.getElementById('addMileageBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    const newMileage = document.getElementById('newMileage').value;
+    const newEventDate = document.getElementById('newEventDate').value;
+    const newEvent = document.getElementById('newEvent').value;
+
+    if (!newEventDate) return alert('Podaj datę czynności.');
+    if (!newMileage || newMileage <= 0) return alert('Podaj prawidłowy przebieg.');
+    if (!newEvent) return alert('Podaj opis czynności.');
+
+
+    fetch(`/vehicle/${id}/mileage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            mileage: newMileage,
+            event: newEvent,
+            eventDate: newEventDate
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) throw new Error(data.error || 'Błąd zapisu');
+
+        // Dodaj nowy wpis na górę tabeli
+        const tbody = document.querySelector('#mileageTable tbody');
+        if (tbody.querySelector('td').textContent === 'Brak wpisów') {
+            tbody.innerHTML = '';
+        }
+        tbody.insertAdjacentHTML('afterbegin', `
+            <tr>
+                <td>${data.eventDate}</td>
+                <td>${data.mileage} km</td>
+                <td>${data.event}</td>
+            </tr>
+        `);
+
+      // Wyczyść pola
+      document.getElementById('newMileage').value = '';
+      document.getElementById('newEvent').value = '';
+      document.getElementById('newEventDate').value = '';
+    })
+    .catch(err => alert(err.message));
+});
+});
+
+    }
+
+    // Zapisz zmiany edytowanego pojazdu
+    function saveVehicleChanges() {
+      const form = document.getElementById('vehicleForm');
+      const formData = {
+        brand: form.brand.value.trim(),
+        model: form.model.value.trim(),
+        garage: form.garage.value,
+        vin: form.vin.value.trim(),
+        policyNumber: form.policyNumber.value.trim(),
+        year: form.year.value ? parseInt(form.year.value, 10) : null,
+        insuranceDate: form.insuranceDate.value || null,
+        inspectionDate: form.inspectionDate.value || null,
+        reminderEmail: form.reminderEmail.value.trim() || null,
+        event: form.event.value.trim(),
+        mileage: form.mileage.value ? parseInt(form.mileage.value, 10) : null,
+       
+      };
+
+      fetch(`/edit/${currentVehicleId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Błąd zapisu danych.');
+          return res.json();
+        })
+        .then(() => {
+          document.getElementById('saveMessage').textContent =
+            '✅ Zapisano zmiany.';
+          document.getElementById('errorMessage').textContent = '';
+
+          // Aktualizuj kafelek pojazdu na liście
+          updateVehicleCard(currentVehicleId, formData);
+        })
+        .catch((error) => {
+          console.error('Błąd:', error);
+          document.getElementById('errorMessage').textContent =
+            '❌ Nie udało się zapisać zmian.';
+          document.getElementById('saveMessage').textContent = '';
+        });
+    }
+
+    // Aktualizuj kafelek pojazdu (np. po zmianie marki, modelu, garażu, notatek)
+    function updateVehicleCard(id, data) {
+      const card = document.getElementById(`vehicle-card-${id}`);
+      if (!card) return;
+      card.dataset.garage = data.garage;
+
+      // Aktualizuj tekst
+      card.querySelector('strong').textContent = `${data.brand} ${data.model}`;
+      card.querySelector('.vehicle-garage').textContent = `Garaż: ${data.garage}`;
+      
+    }
+
+    // Obsługa kliknięć przycisków "Wyświetl szczegóły pojazdu"
+    document.querySelectorAll('.vehicle-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const vehicleId = button.dataset.id;
+        loadVehicleDetails(vehicleId);
+      });
+    });
+
+    // Filtrowanie kafelków po garażu
+    document.getElementById('garageFilter').addEventListener('change', (e) => {
+      const selected = e.target.value;
+      document.querySelectorAll('.vehicle-card').forEach((card) => {
+        const cardGarage = card.dataset.garage;
+        card.style.display = !selected || cardGarage === selected ? 'block' : 'none';
+      });
+    });
+
+        // Obsługa przesyłania zdjęcia pojazdu
+    document.addEventListener('submit', function (event) {
+      if (event.target && event.target.id === 'uploadForm') {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        fetch(`/upload/${currentVehicleId}`, {
+          method: 'POST',
+          body: formData,
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Błąd podczas przesyłania pliku.');
+            return res.json();
+          })
+          .then((data) => {
+            if (data.success && data.imagePath) {
+              // Zaktualizuj zdjęcie w szczegółach pojazdu i kafelku
+              const newImageUrl = `/uploads/${data.imagePath}`;
+
+              const cardImg = document
+                .getElementById(`vehicle-card-${currentVehicleId}`)
+                ?.querySelector('img');
+              if (cardImg) {
+                cardImg.src = newImageUrl;
+              }
+
+              const detailImg = document
+                .querySelector('#vehicle-details img');
+              if (detailImg) {
+                detailImg.src = newImageUrl;
+              }
+            }
+          })
+          .catch((error) => {
+            console.error('Błąd podczas uploadu:', error);
+            alert('❌ Nie udało się przesłać zdjęcia.');
+          });
+      }
+    });
+
+    // Obsługa usuwania
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('delete-log')) {
+    const id = e.target.dataset.id;
+    if (confirm('Na pewno chcesz usunąć ten wpis?')) {
+      const res = await fetch(`/mileage/${id}`, { method: 'DELETE' });
+      const result = await res.json();
+      if (result.success) {
+        loadMileageLogs(currentVehicleId);
+      }
+    }
+  }
+});
+
+// Obsługa edycji
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('edit-log')) {
+    const id = e.target.dataset.id;
+    const mileage = prompt('Podaj nowy przebieg:');
+    const event = prompt('Podaj nową czynność:');
+    if (mileage) {
+      const res = await fetch(`/mileage/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mileage, event })
+      });
+      const result = await res.json();
+      if (result.success) {
+        loadMileageLogs(currentVehicleId);
+      }
+    }
+  }
+});
+async function saveVehicle(id) {
+  const form = document.getElementById('vehicleForm');
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData.entries());
+
+  const res = await fetch(`/edit/vehicle/${id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+  if (result.success) {
+    alert('Dane pojazdu zapisane ✅');
+  } else {
+    alert('Błąd: ' + result.message);
+  }
+}
+
+function saveReminders(vehicleId) {
+  const inspectionDate = document.getElementById("inspectionDate").value;
+  const insuranceDate = document.getElementById("insuranceDate").value;
+  const policyNumber = document.getElementById("policyNumber").value;
+  const reminderEmail = document.getElementById("reminderEmail").value;
+
+  fetch(`/update-reminders/${vehicleId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      inspectionDate,
+      insuranceDate,
+      policyNumber,
+      reminderEmail
+    })
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Błąd przy zapisie przypomnień");
+      return res.json();
+    })
+    .then(() => {
+      alert("✅ Przypomnienia zostały zaktualizowane!");
+    })
+    .catch(err => {
+      console.error(err);
+      alert("❌ Nie udało się zapisać przypomnień.");
+    });
+}
+
+  </script>
+  
+</body>
+</html>

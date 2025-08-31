@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dodaj nowy pojazd</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <h2>Dodaj nowy pojazd</h2>
+<form action="/add" method="POST">
+  <label>Marka:</label><br>
+  <input type="text" name="brand" required><br><br>
+
+  <label>Model:</label><br>
+  <input type="text" name="model" required><br><br>
+
+ <label for="garage">Garaż:</label><br>
+<input type="text" id="garage" name="garage" required><br><br>>
+
+  <button type="submit">Dodaj pojazd</button>
+</form>
+
+
+  <br />
+  <a href="/">← Powrót do listy pojazdów</a>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logowanie</title>
+  <style>
+    /* Reset i nowoczesny font */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", Helvetica, sans-serif;
+      background: linear-gradient(160deg, #f5f7fa, #c3cfe2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #1c1c1e;
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .login-container input[type="text"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 1.1rem;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    .login-container input:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+      outline: none;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 16px;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .login-container button:hover {
+      background-color: #005ecb;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 400px) {
+      .login-container h2 {
+        font-size: 1.6rem;
+      }
+
+      .login-container input[type="text"],
+      .login-container input[type="password"],
+      .login-container button {
+        font-size: 1rem;
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Logowanie</h2>
+    <form method="POST" action="/login">
+      <input type="text" name="username" placeholder="Login" required>
+      <input type="password" name="password" placeholder="Hasło" required>
+      <button type="submit">Zaloguj</button>
+    </form>
+  </div>
+</body>
+</html>
+
