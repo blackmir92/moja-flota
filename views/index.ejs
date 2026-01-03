@@ -621,20 +621,17 @@ const html = `
 
   </div>
 
-<h3>Historia czynności</h3>
-<table id="mileageTable">
-  <thead>
-    <tr>
-      <th>Data</th>
-      <th>Przebieg (km)</th>
-      <th>Czynność</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- wiersze będą dodawane dynamicznie przez JS -->
-  </tbody>
-</table>
-
+  <h3>Historia przebiegów i czynności</h3>
+  <table id="mileageTable">
+    <thead>
+      <tr>
+        <th>Data czynności</th>
+        <th>Przebieg</th>
+        <th>Czynność</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
 
 </div>
@@ -933,51 +930,6 @@ function saveReminders(vehicleId) {
 }
 
   </script>
-
-<script>
-async function loadMileageLogs(vehicleId) {
-  try {
-    const res = await fetch(`/vehicle/${vehicleId}/mileage`);
-    const logs = await res.json();
-
-    const mappedLogs = logs.map(log => ({
-      eventDate: log.created_at ? log.created_at.split('T')[0] : '',
-      mileage: log.mileage || '',
-      event: log.action || ''
-    }));
-
-    const tbody = document.querySelector('#mileageTable tbody');
-    tbody.innerHTML = '';
-
-    if (mappedLogs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3">Brak zdarzeń</td></tr>';
-      return;
-    }
-
-    mappedLogs.forEach(log => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${log.eventDate}</td>
-        <td>${log.mileage}</td>
-        <td>${log.event}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-  } catch (err) {
-    console.error('Błąd przy pobieraniu historii czynności:', err);
-  }
-}
-
-// Wywołaj funkcję dla aktualnego pojazdu
-// Jeśli masz zmienną vehicle.id z EJS:
-loadMileageLogs(<%= vehicle.id %>);
-</script>
-
-<% if (selectedVehicle) { %>
-<script>
-  loadMileageLogs(<%= selectedVehicle.id %>);
-</script>
-<% } %>
+  
 </body>
 </html>
