@@ -104,12 +104,6 @@ const upload = multer({ storage: storage });
 app.set('view engine', 'ejs');
 
 
-// Formularz dodawania nowego pojazdu
-app.get('/add', (req, res) => {
-  res.render('add');
-});
-
-// Obsługa przesłanego formularza
 app.post('/add', (req, res) => {
   const vehicle = {
     brand: req.body.brand,
@@ -119,13 +113,15 @@ app.post('/add', (req, res) => {
     vin: req.body.vin || null,
     year: req.body.year || null,
     policyNumber: req.body.policyNumber || null,
-    date: new Date().toISOString().split('T')[0], // dzisiejsza data
+    date: new Date().toISOString().split('T')[0],
     imagePath: null,
     admin: null,
     insuranceDate: req.body.insuranceDate || null,
     inspectionDate: req.body.inspectionDate || null,
     reminderEmail: req.body.reminderEmail || null
   };
+
+  console.log("DEBUG: vehicle to add:", vehicle);
 
   db.addVehicle(vehicle)
     .then(() => res.redirect('/'))
