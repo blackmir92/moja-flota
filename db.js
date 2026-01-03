@@ -123,7 +123,7 @@ function addMileageLog(vehicleId, mileage, action) {
     [vehicleId, mileage, action]
   );
 }
-
+module.exports.getAllVehicles = getVehicles;
 module.exports = {
   getVehicles,
   getVehicleById,
