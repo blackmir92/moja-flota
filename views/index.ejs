@@ -974,5 +974,11 @@ async function loadMileageLogs(vehicleId) {
 loadMileageLogs(<%= vehicle.id %>);
 </script>
 
+<% if (selectedVehicle) { %>
+<script>
+  loadMileageLogs(<%= selectedVehicle.id %>);
+</script>
+<% } %>
+
 </body>
 </html>
