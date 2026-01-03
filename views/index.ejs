@@ -906,7 +906,7 @@ function saveReminders(vehicleId) {
   const reminderEmail = document.getElementById("reminderEmail").value;
 
   fetch(`/update-reminders/${vehicleId}`, {
-    method: "PUT",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       inspectionDate,
