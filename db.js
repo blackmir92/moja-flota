@@ -1,214 +1,136 @@
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./vehicles.db');
+const { Pool } = require('pg');
 
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
-db.serialize(() => {
-  // tabela pojazdów
-  db.run(`
+/* =======================
+   INICJALIZACJA TABEL
+======================= */
+
+async function initDB() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS vehicles (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       brand TEXT,
       model TEXT,
       garage TEXT,
+      note TEXT,
       vin TEXT,
-      year TEXT,
+      year INTEGER,
       policyNumber TEXT,
       date TEXT,
       imagePath TEXT,
       admin TEXT,
       insuranceDate TEXT,
       inspectionDate TEXT,
-      reminderEmail TEXT,
-      event TEXT,
-      mileage TEXT,
-      eventDate TEXT
-    );
+      reminderEmail TEXT
+    )
   `);
 
-  // tabela przebiegów z czynnością i datą
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS mileage_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      vehicle_id INTEGER NOT NULL,
-      mileage INTEGER NOT NULL,
-      event TEXT,
-      eventDate TEXT,
-      dateAdded TEXT NOT NULL DEFAULT (date('now')),
-      FOREIGN KEY(vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
-    );
+      id SERIAL PRIMARY KEY,
+      vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
+      mileage INTEGER,
+      action TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
   `);
-});
-
-db.all(`PRAGMA table_info(vehicles)`, (err, columns) => {
-  if (err) {
-    console.error('Błąd przy sprawdzaniu kolumn:', err);
-  } else if (Array.isArray(columns)) {
-    const hasAdmin = columns.some(col => col.name === 'admin');
-    if (!hasAdmin) {
-      db.run(`ALTER TABLE vehicles ADD COLUMN admin TEXT`);
-    }
-  }
-});
-
-// ======= Funkcje =======
-
-function addVehicle(brand, model, garage) {
-  return new Promise((resolve, reject) => {
-    const date = new Date().toISOString().slice(0, 10);
-    db.run(
-      `INSERT INTO vehicles (brand, model, garage, date) VALUES (?, ?, ?, ?)`,
-      [brand, model, garage, date],
-      function (err) {
-        if (err) reject(err);
-        else resolve();
-      }
-    );
-  });
 }
 
-function getAllVehicles() {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM vehicles ORDER BY id DESC', (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+initDB();
+
+/* =======================
+   VEHICLES
+======================= */
+
+function getVehicles() {
+  return pool.query('SELECT * FROM vehicles ORDER BY id DESC')
+    .then(res => res.rows);
 }
 
 function getVehicleById(id) {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT * FROM vehicles WHERE id = ?', [id], (err, row) => {
-      if (err) {
-        console.error('DB error:', err);
-        reject(err);
-      } else {
-      
-        resolve(row);
-      }
-    });
-  });
+  return pool.query('SELECT * FROM vehicles WHERE id = $1', [id])
+    .then(res => res.rows[0]);
 }
 
+function addVehicle(vehicle) {
+  const {
+    brand, model, garage, note, vin, year,
+    policyNumber, date, imagePath, admin,
+    insuranceDate, inspectionDate, reminderEmail
+  } = vehicle;
 
-function updateVehicleDetails(id, updates) {
-  return new Promise((resolve, reject) => {
-    const allowedFields = ['brand', 'model', 'vin', 'year', 'policyNumber', 'garage', 'date', 'imagePath', 'insuranceDate', 'inspectionDate', 'reminderEmail', 'event', 'mileage', 'eventDate' ];
+  return pool.query(`
+    INSERT INTO vehicles
+    (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+  `, [
+    brand, model, garage, note, vin, year,
+    policyNumber, date, imagePath, admin,
+    insuranceDate, inspectionDate, reminderEmail
+  ]);
+}
 
-    const fields = [];
-    const values = [];
-    for (const key of allowedFields) {
-      if (updates.hasOwnProperty(key)) {
-        fields.push(`${key} = ?`);
-        values.push(updates[key]);
-      }
-    }
+function updateVehicle(id, vehicle) {
+  const {
+    brand, model, garage, note, vin, year,
+    policyNumber, date, imagePath, admin,
+    insuranceDate, inspectionDate, reminderEmail
+  } = vehicle;
 
-    if (fields.length === 0) {
-      resolve();
-      return;
-    }
-
-    const sql = `UPDATE vehicles SET ${fields.join(', ')} WHERE id = ?`;
-    values.push(id);
-
-    db.run(sql, values, function (err) {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  return pool.query(`
+    UPDATE vehicles SET
+      brand=$1, model=$2, garage=$3, note=$4, vin=$5, year=$6,
+      policyNumber=$7, date=$8, imagePath=$9, admin=$10,
+      insuranceDate=$11, inspectionDate=$12, reminderEmail=$13
+    WHERE id=$14
+  `, [
+    brand, model, garage, note, vin, year,
+    policyNumber, date, imagePath, admin,
+    insuranceDate, inspectionDate, reminderEmail,
+    id
+  ]);
 }
 
 function deleteVehicle(id) {
-  return new Promise((resolve, reject) => {
-    db.run('DELETE FROM vehicles WHERE id = ?', [id], function (err) {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  return pool.query('DELETE FROM vehicles WHERE id=$1', [id]);
 }
 
-function updateVehicleImage(id, imagePath) {
-  return new Promise((resolve, reject) => {
-    db.run(
-      'UPDATE vehicles SET imagePath = ? WHERE id = ?',
-      [imagePath, id],
-      function (err) {
-        if (err) reject(err);
-        else resolve();
-      }
-    );
-  });
-}
-function getUniqueGarages() {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT DISTINCT garage FROM vehicles WHERE garage IS NOT NULL AND garage != ""', (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows.map(row => row.garage));
-    });
-  });
-}
-function getVehiclesWithReminders() {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT * FROM vehicles WHERE reminderEmail IS NOT NULL AND reminderEmail != ''`,
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      }
-    );
-  });
+function getGarages() {
+  return pool.query('SELECT DISTINCT garage FROM vehicles')
+    .then(res => res.rows.map(r => r.garage));
 }
 
-// Dodawanie wpisu przebiegu z czynnością i datą
-function addMileageLog(vehicleId, mileage, event, eventDate) {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO mileage_logs (vehicle_id, mileage, event, eventDate) VALUES (?, ?, ?, ?)`,
-      [vehicleId, mileage, event, eventDate],
-      function(err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
-      }
-    );
-  });
-}
+/* =======================
+   MILEAGE
+======================= */
 
-// Pobieranie przebiegów dla pojazdu (z event i eventDate)
 function getMileageLogs(vehicleId) {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT * FROM mileage_logs WHERE vehicle_id = ? ORDER BY eventDate DESC`,
-      [vehicleId],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      }
-    );
-  });
+  return pool.query(
+    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
+    [vehicleId]
+  ).then(res => res.rows);
 }
 
-
-function all(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+function addMileageLog(vehicleId, mileage, action) {
+  return pool.query(
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3)',
+    [vehicleId, mileage, action]
+  );
 }
 
-
-// ======= Eksport funkcji =======
 module.exports = {
-  addVehicle,
-  getAllVehicles,
+  getVehicles,
   getVehicleById,
-  updateVehicleDetails,
+  addVehicle,
+  updateVehicle,
   deleteVehicle,
-  updateVehicleImage,
-  getUniqueGarages,
-  getVehiclesWithReminders,
-  addMileageLog, 
-  getMileageLogs, 
-  all
+  getGarages,
+  getMileageLogs,
+  addMileageLog
 };
