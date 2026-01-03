@@ -65,18 +65,18 @@ function addVehicle(vehicle) {
     insuranceDate, inspectionDate, reminderEmail
   } = vehicle;
 
-  // Konwersja pustych wartości na null
   const yearInt = year === "" ? null : parseInt(year, 10);
 
   return pool.query(`
     INSERT INTO vehicles
     (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+    RETURNING *
   `, [
     brand, model, garage, note, vin, yearInt,
     policyNumber, date, imagePath, admin,
     insuranceDate, inspectionDate, reminderEmail
-  ]);
+  ]).then(res => res.rows[0]);
 }
 
 function updateVehicle(id, vehicle) {
@@ -94,12 +94,13 @@ function updateVehicle(id, vehicle) {
       policyNumber=$7, date=$8, imagePath=$9, admin=$10,
       insuranceDate=$11, inspectionDate=$12, reminderEmail=$13
     WHERE id=$14
+    RETURNING *
   `, [
     brand, model, garage, note, vin, yearInt,
     policyNumber, date, imagePath, admin,
     insuranceDate, inspectionDate, reminderEmail,
     id
-  ]);
+  ]).then(res => res.rows[0]);
 }
 
 function deleteVehicle(id) {
@@ -112,23 +113,36 @@ function getGarages() {
 }
 
 /* =======================
-   MILEAGE
+   MILEAGE LOGS
 ======================= */
 
+// Pobranie historii przebiegów i czynności
 function getMileageLogs(vehicleId) {
   return pool.query(
     'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
     [vehicleId]
-  ).then(res => res.rows);
+  ).then(res => {
+    // mapowanie dla frontendu: created_at -> date
+    return res.rows.map(r => ({
+      date: r.created_at ? r.created_at.toISOString().split('T')[0] : '',
+      mileage: r.mileage,
+      action: r.action
+    }));
+  });
 }
 
+// Dodanie nowej czynności/przebiegu
 function addMileageLog(vehicleId, mileage, action) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
   return pool.query(
-    'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3)',
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3) RETURNING *',
     [vehicleId, mileageInt, action]
-  );
+  ).then(res => res.rows[0]);
 }
+
+/* =======================
+   REMINDERS
+======================= */
 
 function updateVehicleReminders(id, data) {
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
@@ -155,16 +169,16 @@ function updateVehicleReminders(id, data) {
 }
 
 /* =======================
-   ALIASY DLA KOMPATYBILNOŚCI
+   EXPORTY
 ======================= */
 
 module.exports = {
   getVehicles,
-  getAllVehicles: getVehicles,           // alias dla starego kodu
+  getAllVehicles: getVehicles,
   getVehicleById,
   addVehicle,
   updateVehicle,
-  updateVehicleDetails: updateVehicle,   // alias dla starego kodu
+  updateVehicleDetails: updateVehicle,
   deleteVehicle,
   getGarages,
   getMileageLogs,
