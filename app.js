@@ -289,43 +289,37 @@ app.get("/", async (req, res) => {
 });
 
 
-// Zapis przebiegu z czynnością i datą
-app.post('/vehicle/:id/mileage', async (req, res) => {
-  try {
-    const vehicleId = req.params.id;
-    const mileage = Number(req.body.mileage);
-    const event = req.body.event || '';
-    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0];
-
-    if (!Number.isFinite(mileage) || mileage <= 0) {
-      return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
-    }
-
-    // Teraz zapisujemy przebieg razem z czynnością i datą
-    const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
-
-    res.json({ 
-      success: true,
-      id: insertedId || null,
-      mileage,
-      event,
-      eventDate
-    });
-  } catch (err) {
-    console.error('Błąd przy zapisie przebiegu:', err);
-    res.status(500).json({ success: false, error: 'Błąd serwera' });
-  }
-});
+// Pobranie historii przebiegów dla pojazdu (AJAX)
 app.get('/vehicle/:id/mileage', async (req, res) => {
+  const vehicleId = req.params.id;
   try {
-    const logs = await db.getMileageLogs(req.params.id);
+    const logs = await db.getMileageLogs(vehicleId);
     res.json(logs);
   } catch (err) {
-    console.error('Błąd przy pobieraniu historii przebiegów:', err);
-    res.status(500).json({ error: 'Błąd serwera' });
+    console.error("Błąd pobierania przebiegów:", err);
+    res.status(500).json({ error: "Błąd pobierania historii przebiegów" });
   }
 });
 
+// Dodanie nowego wpisu przebiegu/czynności (AJAX)
+app.post('/vehicle/:id/mileage', async (req, res) => {
+  const vehicleId = req.params.id;
+  const { mileage, action } = req.body;
+
+  try {
+    const newLog = await db.addMileageLog(vehicleId, mileage, action);
+    // mapowanie created_at -> date dla frontendu
+    const formattedLog = {
+      date: newLog.created_at ? newLog.created_at.toISOString().split('T')[0] : '',
+      mileage: newLog.mileage,
+      action: newLog.action
+    };
+    res.json(formattedLog);
+  } catch (err) {
+    console.error("Błąd dodawania przebiegu:", err);
+    res.status(500).json({ error: "Błąd dodawania przebiegu" });
+  }
+});
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
