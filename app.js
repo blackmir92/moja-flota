@@ -104,29 +104,21 @@ const upload = multer({ storage: storage });
 app.set('view engine', 'ejs');
 
 
-app.post('/add', (req, res) => {
-  const vehicle = {
-    brand: req.body.brand || null,
-    model: req.body.model || null,
-    garage: req.body.garage || null,
-    note: null,
-    vin: null,
-    year: null,
-    policyNumber: null,
-    date: new Date().toISOString().split('T')[0],
-    imagePath: null,
-    admin: null,
-    insuranceDate: null,
-    inspectionDate: null,
-    reminderEmail: null
-  };
-
-  console.log("DEBUG: vehicle to add:", vehicle);
-  
-  // zamiast dodawać od razu do bazy — wyświetlamy w przeglądarce
-  res.json(vehicle);
+// Formularz dodawania nowego pojazdu
+app.get('/add', (req, res) => {
+  res.render('add');
 });
 
+// Obsługa przesłanego formularza
+app.post('/add', (req, res) => {
+  const { brand, model, garage } = req.body;
+  db.addVehicle(brand, model, garage)
+    .then(() => res.redirect('/'))
+    .catch(err => {
+  console.error("Błąd przy dodawaniu pojazdu:", err);
+  res.status(500).send("Błąd przy dodawaniu pojazdu");
+});
+});
 
 // Uruchomienie serwera
 app.listen(PORT, () => {
