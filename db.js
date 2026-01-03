@@ -136,7 +136,24 @@ function addMileageLog(vehicleId, mileage, action) {
     [vehicleId, mileageInt, action]
   );
 }
+function updateVehicleReminders(id, data) {
+  const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
 
+  return pool.query(`
+    UPDATE vehicles SET
+      insuranceDate = $1,
+      inspectionDate = $2,
+      reminderEmail = $3,
+      policyNumber = $4
+    WHERE id = $5
+  `, [
+    insuranceDate === "" ? null : insuranceDate,
+    inspectionDate === "" ? null : inspectionDate,
+    reminderEmail === "" ? null : reminderEmail,
+    policyNumber === "" ? null : policyNumber,
+    id
+  ]);
+}
 /* =======================
    ALIASY DLA KOMPATYBILNOŚCI
 ======================= */
@@ -151,5 +168,6 @@ module.exports = {
   deleteVehicle,
   getGarages,
   getMileageLogs,
-  addMileageLog
+  addMileageLog,
+  updateVehicleReminders
 };
