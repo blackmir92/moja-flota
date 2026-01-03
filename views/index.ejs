@@ -570,19 +570,20 @@ const html = `
 
       <!-- Daty (wewnątrz formularza) -->
       <div class="vehicle-form-dates">
-        <label for="inspectionDate">Data przeglądu:</label>
-        <input type="date" id="inspectionDate" name="inspectionDate" value="${vehicle.inspectionDate || ''}" />
-        <span class="countdown">${calculateDaysLeft(vehicle.inspectionDate)}</span>
+<label for="inspectionDate">Data przeglądu:</label>
+<input type="date" id="inspectionDate" name="inspectionDate" value="${vehicle.inspectiondate || ''}" />
+<span class="countdown">${calculateDaysLeft(vehicle.inspectiondate)}</span>
 
-        <label for="insuranceDate">Data ubezpieczenia:</label>
-        <input type="date" id="insuranceDate" name="insuranceDate" value="${vehicle.insuranceDate || ''}" />
-        <span class="countdown">${calculateDaysLeft(vehicle.insuranceDate)}</span>
+<label for="insuranceDate">Data ubezpieczenia:</label>
+<input type="date" id="insuranceDate" name="insuranceDate" value="${vehicle.insurancedate || ''}" />
+<span class="countdown">${calculateDaysLeft(vehicle.insurancedate)}</span>
 
-        <label for="policyNumber">Numer polisy:</label>
-        <input type="text" id="policyNumber" name="policyNumber" value="${vehicle.policyNumber || ''}" />
+<label for="policyNumber">Numer polisy:</label>
+<input type="text" id="policyNumber" name="policyNumber" value="${vehicle.policynumber || ''}" />
 
-        <label for="reminderEmail">📧 Email do przypomnień (10 dni przed terminem):</label>
-        <input type="email" id="reminderEmail" name="reminderEmail" value="${vehicle.reminderEmail || ''}" placeholder="np. jan.kowalski@example.com" />
+<label for="reminderEmail">📧 Email do przypomnień (10 dni przed terminem):</label>
+<input type="email" id="reminderEmail" name="reminderEmail" value="${vehicle.reminderemail || ''}" placeholder="np. jan.kowalski@example.com" />
+
          <button type="button" class="ios-green-btn" onclick="saveReminders('${vehicle.id}')">
     🔔 Aktualizuj przypomnienia
   </button>
