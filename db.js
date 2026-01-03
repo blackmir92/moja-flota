@@ -65,15 +65,12 @@ function addVehicle(vehicle) {
     insuranceDate, inspectionDate, reminderEmail
   } = vehicle;
 
-  // Konwersja pustych wartości na null
-  const yearInt = year === "" ? null : parseInt(year, 10);
-
   return pool.query(`
     INSERT INTO vehicles
     (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
   `, [
-    brand, model, garage, note, vin, yearInt,
+    brand, model, garage, note, vin, year,
     policyNumber, date, imagePath, admin,
     insuranceDate, inspectionDate, reminderEmail
   ]);
@@ -86,8 +83,6 @@ function updateVehicle(id, vehicle) {
     insuranceDate, inspectionDate, reminderEmail
   } = vehicle;
 
-  const yearInt = year === "" ? null : parseInt(year, 10);
-
   return pool.query(`
     UPDATE vehicles SET
       brand=$1, model=$2, garage=$3, note=$4, vin=$5, year=$6,
@@ -95,7 +90,7 @@ function updateVehicle(id, vehicle) {
       insuranceDate=$11, inspectionDate=$12, reminderEmail=$13
     WHERE id=$14
   `, [
-    brand, model, garage, note, vin, yearInt,
+    brand, model, garage, note, vin, year,
     policyNumber, date, imagePath, admin,
     insuranceDate, inspectionDate, reminderEmail,
     id
@@ -123,51 +118,19 @@ function getMileageLogs(vehicleId) {
 }
 
 function addMileageLog(vehicleId, mileage, action) {
-  const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
   return pool.query(
     'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3)',
-    [vehicleId, mileageInt, action]
+    [vehicleId, mileage, action]
   );
 }
-
-function updateVehicleReminders(id, data) {
-  const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
-
-  return pool.query(`
-    UPDATE vehicles SET
-      insuranceDate = $1,
-      inspectionDate = $2,
-      reminderEmail = $3,
-      policyNumber = $4
-    WHERE id = $5
-  `, [
-    insuranceDate === "" ? null : insuranceDate,
-    inspectionDate === "" ? null : inspectionDate,
-    reminderEmail === "" ? null : reminderEmail,
-    policyNumber === "" ? null : policyNumber,
-    id
-  ]).then(res => {
-    console.log("DB update rowCount:", res.rowCount);
-    return res;
-  }).catch(err => {
-    console.error("DB update error:", err);
-  });
-}
-
-/* =======================
-   ALIASY DLA KOMPATYBILNOŚCI
-======================= */
-
+module.exports.getAllVehicles = getVehicles;
 module.exports = {
   getVehicles,
-  getAllVehicles: getVehicles,           // alias dla starego kodu
   getVehicleById,
   addVehicle,
   updateVehicle,
-  updateVehicleDetails: updateVehicle,   // alias dla starego kodu
   deleteVehicle,
   getGarages,
   getMileageLogs,
-  addMileageLog,
-  updateVehicleReminders
+  addMileageLog
 };
