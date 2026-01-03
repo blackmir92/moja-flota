@@ -300,7 +300,6 @@ app.get('/vehicle/:id/mileage', async (req, res) => {
     res.status(500).json({ error: "Błąd pobierania historii przebiegów" });
   }
 });
-
 // Dodanie nowego wpisu przebiegu/czynności (AJAX)
 app.post('/vehicle/:id/mileage', async (req, res) => {
   const vehicleId = req.params.id;
@@ -308,18 +307,13 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
 
   try {
     const newLog = await db.addMileageLog(vehicleId, mileage, action);
-    // mapowanie created_at -> date dla frontendu
-    const formattedLog = {
-      date: newLog.created_at ? newLog.created_at.toISOString().split('T')[0] : '',
-      mileage: newLog.mileage,
-      action: newLog.action
-    };
-    res.json(formattedLog);
+    res.json(newLog); // teraz już zawsze zawiera date, mileage i action
   } catch (err) {
     console.error("Błąd dodawania przebiegu:", err);
     res.status(500).json({ error: "Błąd dodawania przebiegu" });
   }
 });
+
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
