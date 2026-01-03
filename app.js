@@ -289,28 +289,40 @@ app.get("/", async (req, res) => {
 });
 
 
-// Pobranie historii przebiegów dla pojazdu (AJAX)
-app.get('/vehicle/:id/mileage', async (req, res) => {
-  const vehicleId = req.params.id;
+// Zapis przebiegu z czynnością i datą
+app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
-    const logs = await db.getMileageLogs(vehicleId);
-    res.json(logs);
+    const vehicleId = req.params.id;
+    const mileage = Number(req.body.mileage);
+    const event = req.body.event || '';
+    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0];
+
+    if (!Number.isFinite(mileage) || mileage <= 0) {
+      return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
+    }
+
+    // Teraz zapisujemy przebieg razem z czynnością i datą
+    const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
+
+    res.json({ 
+      success: true,
+      id: insertedId || null,
+      mileage,
+      event,
+      eventDate
+    });
   } catch (err) {
-    console.error("Błąd pobierania przebiegów:", err);
-    res.status(500).json({ error: "Błąd pobierania historii przebiegów" });
+    console.error('Błąd przy zapisie przebiegu:', err);
+    res.status(500).json({ success: false, error: 'Błąd serwera' });
   }
 });
-// Dodanie nowego wpisu przebiegu/czynności (AJAX)
-app.post('/vehicle/:id/mileage', async (req, res) => {
-  const vehicleId = req.params.id;
-  const { mileage, action } = req.body;
-
+app.get('/vehicle/:id/mileage', async (req, res) => {
   try {
-    const newLog = await db.addMileageLog(vehicleId, mileage, action);
-    res.json(newLog); // teraz już zawsze zawiera date, mileage i action
+    const logs = await db.getMileageLogs(req.params.id);
+    res.json(logs);
   } catch (err) {
-    console.error("Błąd dodawania przebiegu:", err);
-    res.status(500).json({ error: "Błąd dodawania przebiegu" });
+    console.error('Błąd przy pobieraniu historii przebiegów:', err);
+    res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -454,9 +466,3 @@ app.get('/export/pdf', async (req, res) => {
     res.status(500).send('Błąd eksportu do PDF');
   }
 });
-
-
-
-
-
-
