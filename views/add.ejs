@@ -1,82 +1,27 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dodaj nowy pojazd</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <h1>Dodaj nowy pojazd</h1>
+  <h2>Dodaj nowy pojazd</h2>
+<form action="/add" method="POST">
+  <label>Marka:</label><br>
+  <input type="text" name="brand" required><br><br>
 
-  <form action="/add" method="POST" enctype="multipart/form-data">
-    <div>
-      <label for="brand">Marka:</label>
-      <input type="text" id="brand" name="brand" required>
-    </div>
+  <label>Model:</label><br>
+  <input type="text" name="model" required><br><br>
 
-    <div>
-      <label for="model">Model:</label>
-      <input type="text" id="model" name="model" required>
-    </div>
+ <label for="garage">Garaż:</label><br>
+<input type="text" id="garage" name="garage" required><br><br>>
 
-    <div>
-      <label for="garage">Garaż:</label>
-      <input type="text" id="garage" name="garage">
-    </div>
+  <button type="submit">Dodaj pojazd</button>
+</form>
 
-    <div>
-      <label for="note">Notatka:</label>
-      <textarea id="note" name="note"></textarea>
-    </div>
 
-    <div>
-      <label for="vin">VIN:</label>
-      <input type="text" id="vin" name="vin">
-    </div>
-
-    <div>
-      <label for="year">Rok:</label>
-      <input type="number" id="year" name="year" min="1900" max="2100">
-    </div>
-
-    <div>
-      <label for="policyNumber">Nr polisy:</label>
-      <input type="text" id="policyNumber" name="policyNumber">
-    </div>
-
-    <div>
-      <label for="date">Data polisy:</label>
-      <input type="date" id="date" name="date">
-    </div>
-
-    <div>
-      <label for="image">Zdjęcie pojazdu:</label>
-      <input type="file" id="image" name="image" accept="image/*">
-    </div>
-
-    <div>
-      <label for="admin">Admin:</label>
-      <input type="text" id="admin" name="admin">
-    </div>
-
-    <div>
-      <label for="insuranceDate">Data końca ubezpieczenia:</label>
-      <input type="date" id="insuranceDate" name="insuranceDate">
-    </div>
-
-    <div>
-      <label for="inspectionDate">Data przeglądu:</label>
-      <input type="date" id="inspectionDate" name="inspectionDate">
-    </div>
-
-    <div>
-      <label for="reminderEmail">Email do przypomnień:</label>
-      <input type="email" id="reminderEmail" name="reminderEmail">
-    </div>
-
-    <button type="submit">Dodaj pojazd</button>
-  </form>
-
-  <a href="/">Powrót do listy pojazdów</a>
+  <br />
+  <a href="/">← Powrót do listy pojazdów</a>
 </body>
 </html>
