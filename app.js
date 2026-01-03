@@ -106,29 +106,25 @@ app.set('view engine', 'ejs');
 
 app.post('/add', (req, res) => {
   const vehicle = {
-    brand: req.body.brand,
-    model: req.body.model,
-    garage: req.body.garage,
-    note: req.body.note || null,
-    vin: req.body.vin || null,
-    year: req.body.year || null,
-    policyNumber: req.body.policyNumber || null,
+    brand: req.body.brand || null,
+    model: req.body.model || null,
+    garage: req.body.garage || null,
+    note: null,
+    vin: null,
+    year: null,
+    policyNumber: null,
     date: new Date().toISOString().split('T')[0],
     imagePath: null,
     admin: null,
-    insuranceDate: req.body.insuranceDate || null,
-    inspectionDate: req.body.inspectionDate || null,
-    reminderEmail: req.body.reminderEmail || null
+    insuranceDate: null,
+    inspectionDate: null,
+    reminderEmail: null
   };
 
   console.log("DEBUG: vehicle to add:", vehicle);
-
-  db.addVehicle(vehicle)
-    .then(() => res.redirect('/'))
-    .catch(err => {
-      console.error("Błąd przy dodawaniu pojazdu:", err);
-      res.status(500).send("Błąd przy dodawaniu pojazdu");
-    });
+  
+  // zamiast dodawać od razu do bazy — wyświetlamy w przeglądarce
+  res.json(vehicle);
 });
 
 
