@@ -65,17 +65,24 @@ function addVehicle(vehicle) {
     insuranceDate, inspectionDate, reminderEmail
   } = vehicle;
 
-  // Konwersja pustych wartości na null
-  const yearInt = year === "" ? null : parseInt(year, 10);
-
   return pool.query(`
     INSERT INTO vehicles
     (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
   `, [
-    brand, model, garage, note, vin, yearInt,
-    policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail
+    brand || null,
+    model || null,
+    garage || null,
+    note || null,
+    vin || null,
+    year === "" || !year ? null : parseInt(year, 10),
+    policyNumber || null,
+    date || null,
+    imagePath || null,
+    admin || null,
+    insuranceDate || null,
+    inspectionDate || null,
+    reminderEmail || null
   ]);
 }
 
