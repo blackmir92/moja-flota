@@ -109,15 +109,31 @@ app.get('/add', (req, res) => {
   res.render('add');
 });
 
-// Obsługa przesłanego formularza
-app.post('/add', (req, res) => {
-  const { brand, model, garage } = req.body;
-  db.addVehicle(brand, model, garage)
-    .then(() => res.redirect('/'))
-    .catch(err => {
-  console.error("Błąd przy dodawaniu pojazdu:", err);
-  res.status(500).send("Błąd przy dodawaniu pojazdu");
-});
+//osługa dodawania
+app.post('/add', async (req, res) => {
+  try {
+    const vehicle = {
+      brand: req.body.brand || null,
+      model: req.body.model || null,
+      garage: req.body.garage || null,
+      note: null,
+      vin: null,
+      year: null,
+      policyNumber: null,
+      date: null,
+      imagePath: null,
+      admin: null,
+      insuranceDate: null,
+      inspectionDate: null,
+      reminderEmail: null
+    };
+
+    await db.addVehicle(vehicle);
+    res.redirect('/');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy dodawaniu pojazdu');
+  }
 });
 
 // Uruchomienie serwera
