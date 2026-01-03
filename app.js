@@ -111,14 +111,30 @@ app.get('/add', (req, res) => {
 
 // Obsługa przesłanego formularza
 app.post('/add', (req, res) => {
-  const { brand, model, garage } = req.body;
-  db.addVehicle(brand, model, garage)
+  const vehicle = {
+    brand: req.body.brand,
+    model: req.body.model,
+    garage: req.body.garage,
+    note: req.body.note || null,
+    vin: req.body.vin || null,
+    year: req.body.year || null,
+    policyNumber: req.body.policyNumber || null,
+    date: new Date().toISOString().split('T')[0], // dzisiejsza data
+    imagePath: null,
+    admin: null,
+    insuranceDate: req.body.insuranceDate || null,
+    inspectionDate: req.body.inspectionDate || null,
+    reminderEmail: req.body.reminderEmail || null
+  };
+
+  db.addVehicle(vehicle)
     .then(() => res.redirect('/'))
     .catch(err => {
-  console.error("Błąd przy dodawaniu pojazdu:", err);
-  res.status(500).send("Błąd przy dodawaniu pojazdu");
+      console.error("Błąd przy dodawaniu pojazdu:", err);
+      res.status(500).send("Błąd przy dodawaniu pojazdu");
+    });
 });
-});
+
 
 // Uruchomienie serwera
 app.listen(PORT, () => {
