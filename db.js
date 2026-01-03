@@ -146,7 +146,12 @@ function updateVehicleReminders(id, data) {
     reminderEmail === "" ? null : reminderEmail,
     policyNumber === "" ? null : policyNumber,
     id
-  ]);
+  ]).then(res => {
+    console.log("DB update rowCount:", res.rowCount);
+    return res;
+  }).catch(err => {
+    console.error("DB update error:", err);
+  });
 }
 
 /* =======================
