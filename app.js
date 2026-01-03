@@ -171,19 +171,22 @@ app.post('/edit/vehicle/:id', async (req, res) => {
 });
 
 // Aktualizacja danych dat i przeglądów
-app.put('/update-reminders/:id', async (req, res) => {
+app.post('/update-reminders/:id', async (req, res) => {
   const { id } = req.params;
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = req.body;
 
-  try {
-    // Używamy nowej funkcji tylko dla przypomnień
-    await db.updateVehicleReminders(id, { insuranceDate, inspectionDate, reminderEmail, policyNumber });
+  console.log("Update reminders payload:", { id, insuranceDate, inspectionDate, reminderEmail, policyNumber });
 
+  try {
+    await db.updateVehicleReminders(id, { insuranceDate, inspectionDate, reminderEmail, policyNumber });
+    console.log("Reminders updated for vehicle:", id);
     res.json({ success: true });
   } catch (err) {
+    console.error("Error updating reminders:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 
 
 
