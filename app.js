@@ -170,18 +170,21 @@ app.post('/edit/vehicle/:id', async (req, res) => {
   }
 });
 
-//Aktualizacja danych dat i przeglądów
+// Aktualizacja danych dat i przeglądów
 app.put('/update-reminders/:id', async (req, res) => {
   const { id } = req.params;
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = req.body;
 
   try {
-    await db.updateVehicleDetails(id, { insuranceDate, inspectionDate, reminderEmail, policyNumber });
+    // Używamy nowej funkcji tylko dla przypomnień
+    await db.updateVehicleReminders(id, { insuranceDate, inspectionDate, reminderEmail, policyNumber });
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 
 
 // Usuwanie pojazdu (POST)
