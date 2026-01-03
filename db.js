@@ -123,9 +123,9 @@ function addMileageLog(vehicleId, mileage, action) {
     [vehicleId, mileage, action]
   );
 }
-module.exports.getAllVehicles = getVehicles;
 module.exports = {
   getVehicles,
+  getAllVehicles: getVehicles,  // alias
   getVehicleById,
   addVehicle,
   updateVehicle,
