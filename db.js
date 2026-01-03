@@ -131,13 +131,21 @@ function getMileageLogs(vehicleId) {
   });
 }
 
-// Dodanie nowej czynności/przebiegu
+// Dodanie nowego wpisu przebiegu/czynności
 function addMileageLog(vehicleId, mileage, action) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
   return pool.query(
     'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3) RETURNING *',
     [vehicleId, mileageInt, action]
-  ).then(res => res.rows[0]);
+  ).then(res => {
+    const row = res.rows[0];
+    // mapowanie created_at -> date dla frontendu
+    return {
+      date: row.created_at ? row.created_at.toISOString().split('T')[0] : '',
+      mileage: row.mileage,
+      action: row.action
+    };
+  });
 }
 
 /* =======================
