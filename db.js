@@ -2,15 +2,12 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
 /* =======================
    INICJALIZACJA TABEL
 ======================= */
-
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS vehicles (
@@ -47,18 +44,7 @@ initDB();
 /* =======================
    VEHICLES
 ======================= */
-
-function getVehicles() {
-  return pool.query('SELECT * FROM vehicles ORDER BY id DESC')
-    .then(res => res.rows);
-}
-
-function getVehicleById(id) {
-  return pool.query('SELECT * FROM vehicles WHERE id = $1', [id])
-    .then(res => res.rows[0]);
-}
-
-function addVehicle(vehicle) {
+async function addVehicle(vehicle) {
   const {
     brand, model, garage, note, vin, year,
     policyNumber, date, imagePath, admin,
@@ -67,7 +53,7 @@ function addVehicle(vehicle) {
 
   const yearInt = year === "" ? null : parseInt(year, 10);
 
-  return pool.query(`
+  const res = await pool.query(`
     INSERT INTO vehicles
     (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
@@ -76,120 +62,54 @@ function addVehicle(vehicle) {
     brand, model, garage, note, vin, yearInt,
     policyNumber, date, imagePath, admin,
     insuranceDate, inspectionDate, reminderEmail
-  ]).then(res => res.rows[0]);
+  ]);
+  return res.rows[0];
 }
 
-function updateVehicle(id, vehicle) {
-  const {
-    brand, model, garage, note, vin, year,
-    policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail
-  } = vehicle;
-
-  const yearInt = year === "" ? null : parseInt(year, 10);
-
-  return pool.query(`
-    UPDATE vehicles SET
-      brand=$1, model=$2, garage=$3, note=$4, vin=$5, year=$6,
-      policyNumber=$7, date=$8, imagePath=$9, admin=$10,
-      insuranceDate=$11, inspectionDate=$12, reminderEmail=$13
-    WHERE id=$14
-    RETURNING *
-  `, [
-    brand, model, garage, note, vin, yearInt,
-    policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail,
-    id
-  ]).then(res => res.rows[0]);
+async function getVehicles() {
+  const res = await pool.query('SELECT * FROM vehicles ORDER BY id DESC');
+  return res.rows;
 }
 
-function deleteVehicle(id) {
-  return pool.query('DELETE FROM vehicles WHERE id=$1', [id]);
-}
-
-function getGarages() {
-  return pool.query('SELECT DISTINCT garage FROM vehicles')
-    .then(res => res.rows.map(r => r.garage));
+async function getVehicleById(id) {
+  const res = await pool.query('SELECT * FROM vehicles WHERE id=$1', [id]);
+  return res.rows[0];
 }
 
 /* =======================
    MILEAGE LOGS
 ======================= */
-
-// Pobranie historii przebiegów i czynności
-function getMileageLogs(vehicleId) {
-  return pool.query(
-    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
-    [vehicleId]
-  ).then(res => {
-    // mapowanie dla frontendu: created_at -> date
-    return res.rows.map(r => ({
-      date: r.created_at ? r.created_at.toISOString().split('T')[0] : '',
-      mileage: r.mileage,
-      action: r.action
-    }));
-  });
-}
-
-// Dodanie nowego wpisu przebiegu/czynności
-function addMileageLog(vehicleId, mileage, action) {
+async function addMileageLog(vehicleId, mileage, action) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
-  return pool.query(
+  const res = await pool.query(
     'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3) RETURNING *',
     [vehicleId, mileageInt, action]
-  ).then(res => {
-    const row = res.rows[0];
-    // mapowanie created_at -> date dla frontendu
-    return {
-      date: row.created_at ? row.created_at.toISOString().split('T')[0] : '',
-      mileage: row.mileage,
-      action: row.action
-    };
-  });
+  );
+  const row = res.rows[0];
+  return {
+    date: row.created_at ? row.created_at.toISOString().split('T')[0] : '',
+    mileage: row.mileage,
+    action: row.action
+  };
 }
 
-/* =======================
-   REMINDERS
-======================= */
-
-function updateVehicleReminders(id, data) {
-  const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
-
-  return pool.query(`
-    UPDATE vehicles SET
-      insuranceDate = $1,
-      inspectionDate = $2,
-      reminderEmail = $3,
-      policyNumber = $4
-    WHERE id = $5
-  `, [
-    insuranceDate === "" ? null : insuranceDate,
-    inspectionDate === "" ? null : inspectionDate,
-    reminderEmail === "" ? null : reminderEmail,
-    policyNumber === "" ? null : policyNumber,
-    id
-  ]).then(res => {
-    console.log("DB update rowCount:", res.rowCount);
-    return res;
-  }).catch(err => {
-    console.error("DB update error:", err);
-  });
+async function getMileageLogs(vehicleId) {
+  const res = await pool.query(
+    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
+    [vehicleId]
+  );
+  return res.rows.map(r => ({
+    date: r.created_at ? r.created_at.toISOString().split('T')[0] : '',
+    mileage: r.mileage,
+    action: r.action
+  }));
 }
-
-/* =======================
-   EXPORTY
-======================= */
 
 module.exports = {
-  getVehicles,
-  getAllVehicles: getVehicles,
-  getVehicleById,
+  initDB,
   addVehicle,
-  updateVehicle,
-  updateVehicleDetails: updateVehicle,
-  deleteVehicle,
-  getGarages,
-  getMileageLogs,
+  getVehicles,
+  getVehicleById,
   addMileageLog,
-  updateVehicleReminders
+  getMileageLogs
 };
