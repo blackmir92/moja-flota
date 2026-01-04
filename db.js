@@ -1,3 +1,4 @@
+
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -31,16 +32,15 @@ async function initDB() {
     )
   `);
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS mileage_logs (
-    id SERIAL PRIMARY KEY,
-    vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
-    mileage INTEGER,
-    action TEXT,
-    event_date DATE,                     -- <--- nowa kolumna na datę czynności
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mileage_logs (
+      id SERIAL PRIMARY KEY,
+      vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
+      mileage INTEGER,
+      action TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 initDB();
@@ -124,11 +124,11 @@ function getMileageLogs(vehicleId) {
     `
     SELECT
       mileage,
-      action AS event,
-      event_date::text AS "eventDate"
+      action        AS event,
+      created_at::date AS "eventDate"
     FROM mileage_logs
     WHERE vehicle_id = $1
-    ORDER BY event_date DESC
+    ORDER BY created_at DESC
     `,
     [vehicleId]
   ).then(res => res.rows);
@@ -137,18 +137,17 @@ function getMileageLogs(vehicleId) {
 
 
 
-function addMileageLog(vehicleId, mileage, action, eventDate) {
+function addMileageLog(vehicleId, mileage, action) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
   return pool.query(
     `
-    INSERT INTO mileage_logs (vehicle_id, mileage, action, event_date)
-    VALUES ($1, $2, $3, $4)
+    INSERT INTO mileage_logs (vehicle_id, mileage, action)
+    VALUES ($1,$2,$3)
     RETURNING id
     `,
-    [vehicleId, mileageInt, action, eventDate]
+    [vehicleId, mileageInt, action]
   ).then(res => res.rows[0].id);
 }
-
 
 function updateVehicleReminders(id, data) {
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
