@@ -118,16 +118,21 @@ function getGarages() {
     .then(res => res.rows.map(r => r.garage));
 }
 
-/* =======================
-   MILEAGE
-======================= */
-
 function getMileageLogs(vehicleId) {
   return pool.query(
-    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
+    `
+    SELECT
+      mileage,
+      action,
+      created_at AS date
+    FROM mileage_logs
+    WHERE vehicle_id = $1
+    ORDER BY created_at DESC
+    `,
     [vehicleId]
   ).then(res => res.rows);
 }
+
 
 function addMileageLog(vehicleId, mileage, action) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
