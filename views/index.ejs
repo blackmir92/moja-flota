@@ -657,74 +657,81 @@ if (vehicleForm) {
 
 
 
-// Wyświetlanie historii przebiegów
+// Załaduj historię po wstawieniu HTML
 fetch(`/vehicle/${id}/mileage`)
   .then(res => res.json())
   .then(data => {
     const tbody = document.querySelector('#mileageTable tbody');
-    tbody.innerHTML = '';
 
-    if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
-      return;
+    // Wyczyść tbody, jeśli jest puste lub zawiera "Brak wpisów"
+    if (!tbody.innerHTML.trim() || tbody.querySelector('td')?.textContent === 'Brak wpisów') {
+        tbody.innerHTML = '';
     }
 
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
+        return;
+    }
+
+    // Dodaj wpisy do tabeli
+    data.sort((a, b) => b.mileage - a.mileage);
     data.forEach(item => {
-      tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-          <td>${item.eventDate || ''}</td>
-          <td>${item.mileage || 0} km</td>
-          <td>${item.event || ''}</td>
-        </tr>
-      `);
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${item.eventDate}</td>
+                <td>${item.mileage} km</td>
+                <td>${item.event}</td>
+            </tr>
+        `);
     });
   })
   .catch(err => console.error(err));
 
-// Dodawanie nowego wpisu
+
+// Obsługa dodawania przebiegu i czynności
 document.getElementById('addMileageBtn').addEventListener('click', (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    const newMileage = document.getElementById('newMileage').value;
+    const newEventDate = document.getElementById('newEventDate').value;
+    const newEvent = document.getElementById('newEvent').value;
 
-  const newMileage = document.getElementById('newMileage').value;
-  const newEventDate = document.getElementById('newEventDate').value;
-  const newEvent = document.getElementById('newEvent').value;
+    if (!newEventDate) return alert('Podaj datę czynności.');
+    if (!newMileage || newMileage <= 0) return alert('Podaj prawidłowy przebieg.');
+    if (!newEvent) return alert('Podaj opis czynności.');
 
-  if (!newEventDate) return alert('Podaj datę czynności.');
-  if (!newMileage || newMileage <= 0) return alert('Podaj prawidłowy przebieg.');
-  if (!newEvent) return alert('Podaj opis czynności.');
 
-  fetch(`/vehicle/${currentVehicleId}/mileage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      mileage: newMileage,
-      event: newEvent,
-      eventDate: newEventDate
+    fetch(`/vehicle/${id}/mileage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            mileage: newMileage,
+            event: newEvent,
+            eventDate: newEventDate
+        })
     })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (!data.success) throw new Error(data.error || 'Błąd zapisu');
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) throw new Error(data.error || 'Błąd zapisu');
 
-    const tbody = document.querySelector('#mileageTable tbody');
-    if (tbody.querySelector('td')?.textContent === 'Brak wpisów') {
-      tbody.innerHTML = '';
-    }
+        // Dodaj nowy wpis na górę tabeli
+        const tbody = document.querySelector('#mileageTable tbody');
+        if (tbody.querySelector('td').textContent === 'Brak wpisów') {
+            tbody.innerHTML = '';
+        }
+        tbody.insertAdjacentHTML('afterbegin', `
+            <tr>
+                <td>${data.eventDate}</td>
+                <td>${data.mileage} km</td>
+                <td>${data.event}</td>
+            </tr>
+        `);
 
-    tbody.insertAdjacentHTML('afterbegin', `
-      <tr>
-        <td>${data.eventDate || ''}</td>
-        <td>${data.mileage} km</td>
-        <td>${data.event}</td>
-      </tr>
-    `);
-
-    // Wyczyść pola
-    document.getElementById('newMileage').value = '';
-    document.getElementById('newEvent').value = '';
-    document.getElementById('newEventDate').value = '';
-  })
-  .catch(err => alert(err.message));
+      // Wyczyść pola
+      document.getElementById('newMileage').value = '';
+      document.getElementById('newEvent').value = '';
+      document.getElementById('newEventDate').value = '';
+    })
+    .catch(err => alert(err.message));
 });
 });
 
