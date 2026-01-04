@@ -121,29 +121,23 @@ function getGarages() {
 }
 
 function getMileageLogs(vehicleId) {
-  return pool.query(
-    `
+  return pool.query(`
     SELECT
       mileage,
       action AS event,
-      event_date::text AS "eventDate"
+      TO_CHAR(event_date, 'YYYY-MM-DD') AS "eventDate"
     FROM mileage_logs
     WHERE vehicle_id = $1
     ORDER BY event_date DESC
   `, [vehicleId]).then(res => res.rows);
 }
 
-
 function addMileageLog(vehicleId, mileage, action, eventDate) {
-  const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
-  return pool.query(
-    `
+  return pool.query(`
     INSERT INTO mileage_logs (vehicle_id, mileage, action, event_date)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id
-    `,
-    [vehicleId, mileageInt, action, eventDate]
-  ).then(res => res.rows[0].id);
+    VALUES ($1,$2,$3,$4) RETURNING id
+  `, [vehicleId, mileage, action, eventDate])
+  .then(res => res.rows[0].id);
 }
 
 function updateVehicleReminders(id, data) {
