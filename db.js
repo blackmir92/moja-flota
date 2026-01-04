@@ -32,15 +32,16 @@ async function initDB() {
     )
   `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS mileage_logs (
-      id SERIAL PRIMARY KEY,
-      vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
-      mileage INTEGER,
-      action TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS mileage_logs (
+    id SERIAL PRIMARY KEY,
+    vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
+    mileage INTEGER,
+    action TEXT,
+    event_date DATE,                   -- <-- nowa kolumna
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`);
 }
 
 initDB();
