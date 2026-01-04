@@ -124,28 +124,26 @@ function getMileageLogs(vehicleId) {
     `
     SELECT
       mileage,
-      action        AS event,
-      created_at::date AS "eventDate"
+      action AS event,
+      event_date::text AS "eventDate"
     FROM mileage_logs
     WHERE vehicle_id = $1
-    ORDER BY created_at DESC
+    ORDER BY event_date DESC
     `,
     [vehicleId]
   ).then(res => res.rows);
 }
 
 
-
-
-function addMileageLog(vehicleId, mileage, action) {
+function addMileageLog(vehicleId, mileage, action, eventDate) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
   return pool.query(
     `
-    INSERT INTO mileage_logs (vehicle_id, mileage, action)
-    VALUES ($1,$2,$3)
+    INSERT INTO mileage_logs (vehicle_id, mileage, action, event_date)
+    VALUES ($1, $2, $3, $4)
     RETURNING id
     `,
-    [vehicleId, mileageInt, action]
+    [vehicleId, mileageInt, action, eventDate]
   ).then(res => res.rows[0].id);
 }
 
