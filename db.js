@@ -130,9 +130,7 @@ function getMileageLogs(vehicleId) {
     FROM mileage_logs
     WHERE vehicle_id = $1
     ORDER BY event_date DESC
-    `,
-    [vehicleId]
-  ).then(res => res.rows);
+  `, [vehicleId]).then(res => res.rows);
 }
 
 
