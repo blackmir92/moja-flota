@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -32,16 +31,15 @@ async function initDB() {
     )
   `);
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS mileage_logs (
-    id SERIAL PRIMARY KEY,
-    vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
-    mileage INTEGER,
-    action TEXT,
-    event_date DATE,                   -- <-- nowa kolumna
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mileage_logs (
+      id SERIAL PRIMARY KEY,
+      vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
+      mileage INTEGER,
+      action TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 initDB();
@@ -120,26 +118,24 @@ function getGarages() {
     .then(res => res.rows.map(r => r.garage));
 }
 
+/* =======================
+   MILEAGE
+======================= */
+
 function getMileageLogs(vehicleId) {
-  return pool.query(`
-    SELECT
-      mileage,
-      action AS event,
-      TO_CHAR(event_date, 'YYYY-MM-DD') AS "eventDate"
-    FROM mileage_logs
-    WHERE vehicle_id = $1
-    ORDER BY event_date DESC
-  `, [vehicleId]).then(res => res.rows);
+  return pool.query(
+    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
+    [vehicleId]
+  ).then(res => res.rows);
 }
 
-function addMileageLog(vehicleId, mileage, action, eventDate) {
-  return pool.query(`
-    INSERT INTO mileage_logs (vehicle_id, mileage, action, event_date)
-    VALUES ($1,$2,$3,$4) RETURNING id
-  `, [vehicleId, mileage, action, eventDate])
-  .then(res => res.rows[0].id);
+function addMileageLog(vehicleId, mileage, action) {
+  const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
+  return pool.query(
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3)',
+    [vehicleId, mileageInt, action]
+  );
 }
-
 function updateVehicleReminders(id, data) {
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
 
