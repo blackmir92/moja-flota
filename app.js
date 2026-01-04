@@ -324,9 +324,10 @@ res.json({
   success: true,
   id: insertedId || null,
   mileage,
-  action: event,
-  date: new Date().toISOString()
+  event,
+  eventDate
 });
+
 
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
