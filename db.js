@@ -123,14 +123,16 @@ function getMileageLogs(vehicleId) {
     `
     SELECT
       mileage,
-      action,
-      created_at AS date
+      action        AS event,
+      created_at::date AS "eventDate"
     FROM mileage_logs
     WHERE vehicle_id = $1
     ORDER BY created_at DESC
-    `
-  , [vehicleId]).then(res => res.rows);
+    `,
+    [vehicleId]
+  ).then(res => res.rows);
 }
+
 
 
 
