@@ -678,7 +678,7 @@ fetch(`/vehicle/${id}/mileage`)
     data.forEach(item => {
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
-               <td>${item.eventDate.split('T')[0]}</td>
+               <td>${item.eventDate || ''}</td>
                 <td>${item.mileage} km</td>
                 <td>${item.event}</td>
             </tr>
@@ -720,7 +720,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         }
         tbody.insertAdjacentHTML('afterbegin', `
             <tr>
-                <td>${data.eventDate}</td>
+                <td>${data.eventDate || ''}</td>
                 <td>${data.mileage} km</td>
                 <td>${data.event}</td>
             </tr>
