@@ -320,13 +320,14 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
     // Teraz zapisujemy przebieg razem z czynnością i datą
     const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
 
-    res.json({ 
-      success: true,
-      id: insertedId || null,
-      mileage,
-      event,
-      eventDate
-    });
+res.json({ 
+  success: true,
+  id: insertedId || null,
+  mileage,
+  action: event,
+  date: new Date().toISOString()
+});
+
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
     res.status(500).json({ success: false, error: 'Błąd serwera' });
