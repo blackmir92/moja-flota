@@ -305,7 +305,7 @@ app.get("/", async (req, res) => {
 });
 
 
-// Zapis przebiegu z czynnością i datą
+// Dodanie nowego przebiegu
 app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
     const vehicleId = req.params.id;
@@ -317,29 +317,22 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    // Teraz zapisujemy przebieg razem z czynnością i datą
     const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
 
-res.json({ 
-  success: true,
-  id: insertedId || null,
-  mileage,
-  event,
-  eventDate
-});
-
-
+    res.json({ success: true, id: insertedId, mileage, event, eventDate });
   } catch (err) {
-    console.error('Błąd przy zapisie przebiegu:', err);
+    console.error(err);
     res.status(500).json({ success: false, error: 'Błąd serwera' });
   }
 });
+
+// Pobranie historii przebiegów
 app.get('/vehicle/:id/mileage', async (req, res) => {
   try {
     const logs = await db.getMileageLogs(req.params.id);
     res.json(logs);
   } catch (err) {
-    console.error('Błąd przy pobieraniu historii przebiegów:', err);
+    console.error(err);
     res.status(500).json({ error: 'Błąd serwera' });
   }
 });
