@@ -716,10 +716,12 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         if (!data.success) throw new Error(data.error || 'Błąd zapisu');
 
         // Dodaj nowy wpis na górę tabeli
-        const tbody = document.querySelector('#mileageTable tbody');
-        if (tbody.querySelector('td').textContent === 'Brak wpisów') {
-            tbody.innerHTML = '';
-        }
+const tbody = document.querySelector('#mileageTable tbody');
+const firstCell = tbody?.querySelector('td'); // zabezpieczenie
+if (firstCell && firstCell.textContent === 'Brak wpisów') {
+    tbody.innerHTML = '';
+}
+
         tbody.insertAdjacentHTML('afterbegin', `
             <tr>
                 <td>${data.eventDate}</td>
