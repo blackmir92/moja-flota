@@ -679,7 +679,7 @@ fetch(`/vehicle/${id}/mileage`)
 data.forEach(item => {
     tbody.insertAdjacentHTML('beforeend', `
         <tr>
-            <td>${item.event_date}</td>
+            <td>${item.eventDate}</td>
             <td>${item.mileage} km</td>
             <td>${item.action}</td>
         </tr>
