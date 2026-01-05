@@ -482,3 +482,23 @@ app.get('/export/pdf', async (req, res) => {
     res.status(500).send('Błąd eksportu do PDF');
   }
 });
+
+//czyszczenie tabeli:
+// Uwaga: tylko tymczasowo! Po wyczyszczeniu usuń ten endpoint.
+app.get('/wipe-mileage', async (req, res) => {
+  try {
+    // Usuń wszystkie wpisy
+    await pool.query('DELETE FROM mileage_logs');
+
+    // PostgreSQL – reset sekwencji id
+    await pool.query('ALTER SEQUENCE mileage_logs_id_seq RESTART WITH 1');
+
+    // Jeśli używasz SQLite zamiast PostgreSQL:
+    // await pool.query("DELETE FROM sqlite_sequence WHERE name='mileage_logs'");
+
+    res.send('Tabela mileage_logs wyczyszczona i ID zresetowane!');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu tabeli.');
+  }
+});
