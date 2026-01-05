@@ -711,30 +711,33 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         })
     })
     .then(res => res.json())
-    .then(data => {
-        if (!data.success) throw new Error(data.error || 'Błąd zapisu');
+.then(data => {
+    if (!data.success) throw new Error(data.error || 'Błąd zapisu');
 
-        // Dodaj nowy wpis na górę tabeli
-const firstCell = tbody.querySelector('td');
-if (firstCell && firstCell.textContent === 'Brak wpisów') {
-    tbody.innerHTML = '';
-}
+    // Bezpiecznie wybieramy tbody
+    const tbody = document.querySelector('#mileageTable tbody');
+    const firstCell = tbody?.querySelector('td');
 
-        tbody.insertAdjacentHTML('afterbegin', `
-            <tr>
-                <td>${data.eventDate}</td>
-                <td>${data.mileage} km</td>
-                <td>${data.event}</td>
-            </tr>
-        `);
+    // Wyczyść "Brak wpisów", jeśli jest
+    if (firstCell && firstCell.textContent === 'Brak wpisów') {
+        tbody.innerHTML = '';
+    }
 
-      // Wyczyść pola
-      document.getElementById('newMileage').value = '';
-      document.getElementById('newEvent').value = '';
-      document.getElementById('newEventDate').value = '';
-    })
-    .catch(err => alert(err.message));
-});
+    // Dodaj nowy wpis
+    tbody.insertAdjacentHTML('afterbegin', `
+        <tr>
+            <td>${data.eventDate}</td>
+            <td>${data.mileage} km</td>
+            <td>${data.event}</td>
+        </tr>
+    `);
+
+    // Wyczyść pola formularza
+    document.getElementById('newMileage').value = '';
+    document.getElementById('newEvent').value = '';
+    document.getElementById('newEventDate').value = '';
+})
+
 });
 
     }
