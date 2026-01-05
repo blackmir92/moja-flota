@@ -675,15 +675,16 @@ fetch(`/vehicle/${id}/mileage`)
 
     // Dodaj wpisy do tabeli
     data.sort((a, b) => b.mileage - a.mileage);
-    data.forEach(item => {
-        tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-                <td>${item.eventDate}</td>
-                <td>${item.mileage} km</td>
-                <td>${item.event}</td>
-            </tr>
-        `);
-    });
+data.forEach(item => {
+    tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td>${new Date(item.created_at).toLocaleDateString('pl-PL')}</td>
+            <td>${item.mileage} km</td>
+            <td>${item.action}</td>
+        </tr>
+    `);
+});
+
   })
   .catch(err => console.error(err));
 
