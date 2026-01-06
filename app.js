@@ -483,7 +483,7 @@ app.get('/export/pdf', async (req, res) => {
   }
 });
 
-//czyszczenie tabeli:
+//czyszczenie tabeli rejestru:
 app.get('/wipe-mileage', async (req, res) => {
   try {
     await db.wipeMileageLogs();
@@ -493,3 +493,15 @@ app.get('/wipe-mileage', async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+//czyszczenie tabeli wszystkich:
+app.get('/wipe-all', async (req, res) => {
+  try {
+    await db.wipeMileageLogs();
+    await db.vehicles();
+    res.send('wszystkie tabele wyczyszczone');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err.message);
+  }
+});
+
