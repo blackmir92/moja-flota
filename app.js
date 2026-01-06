@@ -321,12 +321,12 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Brak daty czynności' });
     }
 
-    await db.addMileageLog(vehicleId, mileage, event, eventDate);
+    await db.addMileageLog(vehicleId, mileage, action, eventDate);
 
     res.json({ 
       success: true,
       mileage,
-      event,
+      action,
       eventDate
     });
   } catch (err) {
