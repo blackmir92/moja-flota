@@ -158,6 +158,9 @@ function updateVehicleReminders(id, data) {
     id
   ]);
 }
+async function wipeMileageLogs() {
+  await pool.query('DELETE FROM mileage_logs');
+}
 /* =======================
    ALIASY DLA KOMPATYBILNOŚCI
 ======================= */
@@ -173,5 +176,6 @@ module.exports = {
   getGarages,
   getMileageLogs,
   addMileageLog,
-  updateVehicleReminders
+  updateVehicleReminders,
+  wipeMileageLogs
 };
