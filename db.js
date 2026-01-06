@@ -155,10 +155,15 @@ function updateVehicleReminders(id, data) {
   ]);
 }
 
+// app.js
+const express = require('express');
+const app = express();
+const db = require('./db'); // Twój moduł db.js z PostgreSQL
+
 // --- Czyści tylko tabelę mileage_logs ---
 app.get('/clean', async (req, res) => {
   try {
-    await db.runQuery('DELETE FROM mileage_logs'); // usuwa wszystkie wpisy w tabeli czynności
+    await db.pool.query('DELETE FROM mileage_logs'); // PostgreSQL
     res.send('Tabela czynności została wyczyszczona ✅');
   } catch (err) {
     console.error(err);
@@ -166,24 +171,11 @@ app.get('/clean', async (req, res) => {
   }
 });
 
-// db.js
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./database.db');
-
-function runQuery(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
-      if (err) reject(err);
-      else resolve(this);
-    });
-  });
-}
-
 // --- Czyści całą bazę pojazdów i czynności ---
 app.get('/cleanall', async (req, res) => {
   try {
-    await db.runQuery('DELETE FROM mileage_logs');
-    await db.runQuery('DELETE FROM vehicles');
+    await db.pool.query('DELETE FROM mileage_logs');
+    await db.pool.query('DELETE FROM vehicles');
     res.send('Cała baza danych została wyczyszczona ✅');
   } catch (err) {
     console.error(err);
@@ -196,16 +188,16 @@ app.get('/cleanall', async (req, res) => {
 ======================= */
 
 module.exports = {
+  pool,  // <- teraz możesz użyć pool.query() w app.js
   getVehicles,
-  getAllVehicles: getVehicles,           // alias dla starego kodu
+  getAllVehicles: getVehicles,
   getVehicleById,
   addVehicle,
   updateVehicle,
-  updateVehicleDetails: updateVehicle,   // alias dla starego kodu
+  updateVehicleDetails: updateVehicle,
   deleteVehicle,
   getGarages,
   getMileageLogs,
   addMileageLog,
   updateVehicleReminders,
-  runQuery,
 };
