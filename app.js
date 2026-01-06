@@ -310,7 +310,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
     const vehicleId = req.params.id;
     const mileage = Number(req.body.mileage);
-    const event = req.body.event || '';
+    const action = req.body.action || '';
     const eventDate = req.body.eventDate; // 👈 TYLKO TO
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
