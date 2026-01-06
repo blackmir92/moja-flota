@@ -311,7 +311,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
     const vehicleId = req.params.id;
     const mileage = Number(req.body.mileage);
     const event = req.body.event || '';
-    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0];
+    const eventDate = req.body.eventDate;
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
