@@ -5,22 +5,8 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-
 const session = require('express-session');
 const path = require('path');
-
-
-// konfiguracja sesji
-app.use(session({
-  secret: 'tajny_klucz',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false } // HTTPS => true
-}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -368,7 +354,7 @@ app.get('/export/excel', async (req, res) => {
       { header: 'Data przeglądu', key: 'inspectionDate', width: 15 },
       { header: 'Email przypomnienia', key: 'reminderEmail', width: 25 },
       { header: 'Przebieg', key: 'mileage', width: 12 },
-      { header: 'Zdarzenie', key: 'event', width: 25 },
+      { header: 'Zdarzenie', key: 'action', width: 25 },
       { header: 'Data zdarzenia', key: 'eventDate', width: 15 }
     ];
 
