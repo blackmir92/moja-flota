@@ -486,21 +486,10 @@ app.get('/export/pdf', async (req, res) => {
 //czyszczenie tabeli:
 app.get('/wipe-mileage', async (req, res) => {
   try {
-    // Usuń wszystkie wpisy
-    await pool.query('DELETE FROM mileage_logs');
-
-    // Sprawdź, z jakiej bazy korzystamy (PostgreSQL vs SQLite)
-    const dbType = process.env.DB_TYPE; // np. ustaw w Render jako "postgres" lub "sqlite"
-
-    if (dbType === 'postgres') {
-      await pool.query('ALTER SEQUENCE mileage_logs_id_seq RESTART WITH 1');
-    } else if (dbType === 'sqlite') {
-      await pool.query("DELETE FROM sqlite_sequence WHERE name='mileage_logs'");
-    }
-
-    res.send('Tabela mileage_logs wyczyszczona i ID zresetowane!');
+    await db.wipeMileageLogs();
+    res.send('mileage_logs wyczyszczone');
   } catch (err) {
     console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu tabeli: ' + err.message);
+    res.status(500).send(err.message);
   }
 });
