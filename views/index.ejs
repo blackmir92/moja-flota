@@ -614,10 +614,10 @@ const html = `
 <div class="vehicle-form-events">
   <h3>Dodaj przebieg / czynność</h3>
   <div class="event-row">
-    <input type="date" id="neweventDate" placeholder="Data" />
+    <input type="date" id="newEventDate" placeholder="Data" />
     <input type="number" id="newMileage" placeholder="Przebieg (km)" min="1" />
   </div>
-  <input type="text" id="newAction" placeholder="Czynność (np. wymiana oleju)" class="event-field" />
+  <input type="text" id="newEvent" placeholder="Czynność (np. wymiana oleju)" class="event-field" />
   <button id="addMileageBtn">➕ Dodaj zdarzenie</button>
 </div>
 
@@ -679,7 +679,7 @@ fetch(`/vehicle/${id}/mileage`)
 data.forEach(item => {
     tbody.insertAdjacentHTML('beforeend', `
         <tr>
-            <td>${item.eventDate}</td>
+            <td>${item.event_date}</td>
             <td>${item.mileage} km</td>
             <td>${item.action}</td>
         </tr>
@@ -694,12 +694,12 @@ data.forEach(item => {
 document.getElementById('addMileageBtn').addEventListener('click', (e) => {
     e.preventDefault();
     const newMileage = document.getElementById('newMileage').value;
-    const neweventDate = document.getElementById('neweventDate').value;
-    const newAction = document.getElementById('newAction').value;
+    const newEventDate = document.getElementById('newEventDate').value;
+    const newEvent = document.getElementById('newEvent').value;
 
-    if (!neweventDate) return alert('Podaj datę czynności.');
+    if (!newEventDate) return alert('Podaj datę czynności.');
     if (!newMileage || newMileage <= 0) return alert('Podaj prawidłowy przebieg.');
-    if (!newAction) return alert('Podaj opis czynności.');
+    if (!newEvent) return alert('Podaj opis czynności.');
 
 
     fetch(`/vehicle/${id}/mileage`, {
@@ -707,8 +707,8 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             mileage: newMileage,
-            action: newAction,
-            eventDate: neweventDate
+            event: newEvent,
+            eventDate: newEventDate
         })
     })
     .then(res => res.json())
@@ -716,24 +716,22 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         if (!data.success) throw new Error(data.error || 'Błąd zapisu');
 
         // Dodaj nowy wpis na górę tabeli
-const tbody = document.querySelector('#mileageTable tbody');
-const firstCell = tbody?.querySelector('td'); // zabezpieczenie
-if (firstCell && firstCell.textContent === 'Brak wpisów') {
-    tbody.innerHTML = '';
-}
-
+        const tbody = document.querySelector('#mileageTable tbody');
+        if (tbody.querySelector('td').textContent === 'Brak wpisów') {
+            tbody.innerHTML = '';
+        }
         tbody.insertAdjacentHTML('afterbegin', `
             <tr>
                 <td>${data.eventDate}</td>
                 <td>${data.mileage} km</td>
-                <td>${data.action}</td>
+                <td>${data.event}</td>
             </tr>
         `);
 
       // Wyczyść pola
       document.getElementById('newMileage').value = '';
-      document.getElementById('newAction').value = '';
-      document.getElementById('neweventDate').value = '';
+      document.getElementById('newEvent').value = '';
+      document.getElementById('newEventDate').value = '';
     })
     .catch(err => alert(err.message));
 });
@@ -853,7 +851,39 @@ if (firstCell && firstCell.textContent === 'Brak wpisów') {
       }
     });
 
+    // Obsługa usuwania
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('delete-log')) {
+    const id = e.target.dataset.id;
+    if (confirm('Na pewno chcesz usunąć ten wpis?')) {
+      const res = await fetch(`/mileage/${id}`, { method: 'DELETE' });
+      const result = await res.json();
+      if (result.success) {
+        loadMileageLogs(currentVehicleId);
+      }
+    }
+  }
+});
 
+// Obsługa edycji
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('edit-log')) {
+    const id = e.target.dataset.id;
+    const mileage = prompt('Podaj nowy przebieg:');
+    const event = prompt('Podaj nową czynność:');
+    if (mileage) {
+      const res = await fetch(`/mileage/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mileage, event })
+      });
+      const result = await res.json();
+      if (result.success) {
+        loadMileageLogs(currentVehicleId);
+      }
+    }
+  }
+});
 async function saveVehicle(id) {
   const form = document.getElementById('vehicleForm');
   const formData = new FormData(form);
