@@ -707,7 +707,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             mileage: newMileage,
-            event: newEvent,
+            action: newEvent,
             eventDate: neweventDate
         })
     })
@@ -726,7 +726,7 @@ if (firstCell && firstCell.textContent === 'Brak wpisów') {
             <tr>
                 <td>${data.eventDate}</td>
                 <td>${data.mileage} km</td>
-                <td>${data.event}</td>
+                <td>${data.action}</td>
             </tr>
         `);
 
