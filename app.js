@@ -68,6 +68,31 @@ app.use(session({
   cookie: { secure: false } // true tylko przy HTTPS
 }));
 
+
+// Trasa czyszczenia tylko czynności
+app.get('/clean', async (req, res) => {
+  try {
+    await db.pool.query('DELETE FROM mileage_logs');
+    res.send('Tabela czynności została wyczyszczona ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu tabeli czynności ❌');
+  }
+});
+
+// Trasa czyszczenia całej bazy
+app.get('/cleanall', async (req, res) => {
+  try {
+    await db.pool.query('DELETE FROM mileage_logs');
+    await db.pool.query('DELETE FROM vehicles');
+    res.send('Cała baza danych została wyczyszczona ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu całej bazy ❌');
+  }
+});
+
+
 //dodane do obslugi zdjec
 const multer = require('multer');
 
