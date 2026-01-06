@@ -37,7 +37,7 @@ async function initDB() {
       vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
       mileage INTEGER,
       action TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      eventDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 }
@@ -124,7 +124,7 @@ function getGarages() {
 
 function getMileageLogs(vehicleId) {
   return pool.query(
-    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
+    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY eventDate DESC',
     [vehicleId]
   ).then(res => res.rows);
 }
