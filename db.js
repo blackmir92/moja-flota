@@ -127,7 +127,7 @@ function getMileageLogs(vehicleId) {
     `SELECT id,
             vehicle_id,
             mileage,
-            action AS event,
+            action,
             eventDate
      FROM mileage_logs
      WHERE vehicle_id = $1
