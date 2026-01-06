@@ -154,6 +154,17 @@ function updateVehicleReminders(id, data) {
     id
   ]);
 }
+
+// czyszczenie tabeli
+async function wipeMileageLogs() {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM mileage_logs', function(err) {
+      if (err) return reject(err);
+      resolve(this.changes);
+    });
+  });
+}
+
 /* =======================
    ALIASY DLA KOMPATYBILNOŚCI
 ======================= */
@@ -169,5 +180,6 @@ module.exports = {
   getGarages,
   getMileageLogs,
   addMileageLog,
-  updateVehicleReminders
+  updateVehicleReminders,
+  wipeMileageLogs
 };
