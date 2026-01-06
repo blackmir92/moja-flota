@@ -5,8 +5,22 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+
 const session = require('express-session');
 const path = require('path');
+
+
+// konfiguracja sesji
+app.use(session({
+  secret: 'tajny_klucz',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // HTTPS => true
+}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -296,28 +310,26 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
     const vehicleId = req.params.id;
     const mileage = Number(req.body.mileage);
-    const action = req.body.action || '';
-    const eventDate = req.body.eventDate; // 👈 TYLKO TO
+    const event = req.body.event || '';
+    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0];
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    if (!eventDate) {
-      return res.status(400).json({ success: false, error: 'Brak daty czynności' });
-    }
-
-    await db.addMileageLog(vehicleId, mileage, action, eventDate);
+    // Teraz zapisujemy przebieg razem z czynnością i datą
+    const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
 
     res.json({ 
       success: true,
+      id: insertedId || null,
       mileage,
-      action,
+      event,
       eventDate
     });
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
-    res.status(500).json({ success: false, error: 'Błądd serwera' });
+    res.status(500).json({ success: false, error: 'Błąd serwera' });
   }
 });
 app.get('/vehicle/:id/mileage', async (req, res) => {
@@ -354,7 +366,7 @@ app.get('/export/excel', async (req, res) => {
       { header: 'Data przeglądu', key: 'inspectionDate', width: 15 },
       { header: 'Email przypomnienia', key: 'reminderEmail', width: 25 },
       { header: 'Przebieg', key: 'mileage', width: 12 },
-      { header: 'Zdarzenie', key: 'action', width: 25 },
+      { header: 'Zdarzenie', key: 'event', width: 25 },
       { header: 'Data zdarzenia', key: 'eventDate', width: 15 }
     ];
 
@@ -382,13 +394,13 @@ app.get('/export/excel', async (req, res) => {
         logs.forEach(log => {
           sheet.addRow({
             mileage: log.mileage,
-            action: log.action,
+            event: log.event,
             eventDate: log.eventDate
           });
         });
       } else {
         // Jeśli brak historii — wstaw pustą linię
-        sheet.addRow({ action: 'Brak zdarzeń' });
+        sheet.addRow({ event: 'Brak zdarzeń' });
       }
 
       // Pusta linia odstępu
@@ -452,7 +464,7 @@ app.get('/export/pdf', async (req, res) => {
         doc.fontSize(10).fillColor('black');
         logs.forEach(log => {
           doc.text(
-            `• ${log.eventDate || ''} | ${log.mileage} km | ${log.action || ''}`
+            `• ${log.eventDate || ''} | ${log.mileage} km | ${log.event || ''}`
           );
         });
       } else {
@@ -468,16 +480,5 @@ app.get('/export/pdf', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send('Błąd eksportu do PDF');
-  }
-});
-
-//czyszczenie tabeli:
-app.get('/wipe-mileage', async (req, res) => {
-  try {
-    await db.wipeMileageLogs();
-    res.send('mileage_logs wyczyszczone');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err.message);
   }
 });

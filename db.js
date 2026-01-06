@@ -37,7 +37,7 @@ async function initDB() {
       vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
       mileage INTEGER,
       action TEXT,
-      eventDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 }
@@ -124,26 +124,16 @@ function getGarages() {
 
 function getMileageLogs(vehicleId) {
   return pool.query(
-    `SELECT id,
-            vehicle_id,
-            mileage,
-            action,
-            eventDate
-     FROM mileage_logs
-     WHERE vehicle_id = $1
-     ORDER BY eventDate DESC`,
+    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
     [vehicleId]
   ).then(res => res.rows);
 }
 
-
-function addMileageLog(vehicleId, mileage, action, eventDate) {
+function addMileageLog(vehicleId, mileage, action) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
-
   return pool.query(
-    `INSERT INTO mileage_logs (vehicle_id, mileage, action, eventDate)
-     VALUES ($1, $2, $3, $4)`,
-    [vehicleId, mileageInt, action, eventDate]
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3)',
+    [vehicleId, mileageInt, action]
   );
 }
 function updateVehicleReminders(id, data) {
@@ -164,9 +154,6 @@ function updateVehicleReminders(id, data) {
     id
   ]);
 }
-async function wipeMileageLogs() {
-  await pool.query('DELETE FROM mileage_logs');
-}
 /* =======================
    ALIASY DLA KOMPATYBILNOŚCI
 ======================= */
@@ -182,6 +169,5 @@ module.exports = {
   getGarages,
   getMileageLogs,
   addMileageLog,
-  updateVehicleReminders,
-  wipeMileageLogs
+  updateVehicleReminders
 };
