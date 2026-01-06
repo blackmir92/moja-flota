@@ -311,25 +311,27 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
     const vehicleId = req.params.id;
     const mileage = Number(req.body.mileage);
     const event = req.body.event || '';
-    const eventDate = req.body.eventDate;
+    const eventDate = req.body.eventDate; // 👈 TYLKO TO
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    // Teraz zapisujemy przebieg razem z czynnością i datą
-    const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
+    if (!eventDate) {
+      return res.status(400).json({ success: false, error: 'Brak daty czynności' });
+    }
+
+    await db.addMileageLog(vehicleId, mileage, event, eventDate);
 
     res.json({ 
       success: true,
-      id: insertedId || null,
       mileage,
       event,
       eventDate
     });
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
-    res.status(500).json({ success: false, error: 'Błąd serwera' });
+    res.status(500).json({ success: false, error: 'Błądd serwera' });
   }
 });
 app.get('/vehicle/:id/mileage', async (req, res) => {
