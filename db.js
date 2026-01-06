@@ -155,15 +155,41 @@ function updateVehicleReminders(id, data) {
   ]);
 }
 
-// czyszczenie tabeli
-async function wipeMileageLogs() {
+// --- Czyści tylko tabelę mileage_logs ---
+app.get('/clean', async (req, res) => {
+  try {
+    await db.runQuery('DELETE FROM mileage_logs'); // usuwa wszystkie wpisy w tabeli czynności
+    res.send('Tabela czynności została wyczyszczona ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu tabeli czynności ❌');
+  }
+});
+
+// db.js
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./database.db');
+
+function runQuery(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.run('DELETE FROM mileage_logs', function(err) {
-      if (err) return reject(err);
-      resolve(this.changes);
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve(this);
     });
   });
 }
+
+// --- Czyści całą bazę pojazdów i czynności ---
+app.get('/cleanall', async (req, res) => {
+  try {
+    await db.runQuery('DELETE FROM mileage_logs');
+    await db.runQuery('DELETE FROM vehicles');
+    res.send('Cała baza danych została wyczyszczona ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu całej bazy ❌');
+  }
+});
 
 /* =======================
    ALIASY DLA KOMPATYBILNOŚCI
@@ -181,5 +207,5 @@ module.exports = {
   getMileageLogs,
   addMileageLog,
   updateVehicleReminders,
-  wipeMileageLogs
+  runQuery,
 };
