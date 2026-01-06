@@ -482,3 +482,14 @@ app.get('/export/pdf', async (req, res) => {
     res.status(500).send('Błąd eksportu do PDF');
   }
 });
+
+//czyszczenie tabeli:
+app.get('/wipe-mileage', async (req, res) => {
+  try {
+    await db.wipeMileageLogs();
+    res.send('mileage_logs wyczyszczone');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err.message);
+  }
+});
