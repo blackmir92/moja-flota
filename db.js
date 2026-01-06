@@ -37,7 +37,7 @@ async function initDB() {
       vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
       mileage INTEGER,
       action TEXT,
-      eventDate DATE
+      eventDate TEXT
     )
   `);
 }
