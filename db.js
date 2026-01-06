@@ -129,14 +129,15 @@ function getMileageLogs(vehicleId) {
   ).then(res => res.rows);
 }
 
-function addMileageLog(vehicleId, mileage, action, eventDate) {
+function addMileageLog(vehicleId, mileage, event, eventDate) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
 
   return pool.query(
-    'INSERT INTO mileage_logs (vehicle_id, mileage, action, eventDate) VALUES ($1, $2, $3, $4)',
-    [vehicleId, mileageInt, action, eventDate] // eventDate w formacie 'YYYY-MM-DD'
-  );
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action, eventDate) VALUES ($1, $2, $3, $4) RETURNING id',
+    [vehicleId, mileageInt, event, eventDate]  // eventDate musi być 'YYYY-MM-DD'
+  ).then(res => res.rows[0].id);
 }
+
 function updateVehicleReminders(id, data) {
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
 
