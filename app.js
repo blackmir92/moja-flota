@@ -68,50 +68,6 @@ app.use(session({
   cookie: { secure: false } // true tylko przy HTTPS
 }));
 
-
-// Trasa czyszczenia tylko czynności
-app.get('/clean', async (req, res) => {
-  try {
-    await db.pool.query('DELETE FROM mileage_logs');
-    res.send('Tabela czynności została wyczyszczona ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu tabeli czynności ❌');
-  }
-});
-
-// Trasa czyszczenia całej bazy
-app.get('/cleanall', async (req, res) => {
-  try {
-    await db.pool.query('DELETE FROM mileage_logs');
-    await db.pool.query('DELETE FROM vehicles');
-    res.send('Cała baza danych została wyczyszczona ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu całej bazy ❌');
-  }
-});
-
-// --- TU WKLEJAMY RESET TABLE ---
-app.get('/reset-mileage-table', async (req, res) => {
-  try {
-    await db.pool.query('DROP TABLE IF EXISTS mileage_logs');
-    await db.pool.query(`
-      CREATE TABLE mileage_logs (
-        id SERIAL PRIMARY KEY,
-        vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
-        mileage INTEGER,
-        action TEXT,
-        eventdate DATE
-      )
-    `);
-    res.send('Tabela mileage_logs została zresetowana ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy resetowaniu tabeli ❌\n' + err.message);
-  }
-});
-
 //dodane do obslugi zdjec
 const multer = require('multer');
 
@@ -349,51 +305,42 @@ app.get("/", async (req, res) => {
 });
 
 
+// Zapis przebiegu z czynnością i datą
 app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
-    const vehicleId = Number(req.params.id);
+    const vehicleId = req.params.id;
     const mileage = Number(req.body.mileage);
-    const action = req.body.action;
-    const eventdate = req.body.eventdate;
+    const event = req.body.event || '';
+    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0];
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    if (!action || !eventdate) {
-      return res.status(400).json({ success: false, error: 'Brak danych czynności' });
-    }
+    // Teraz zapisujemy przebieg razem z czynnością i datą
+    const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
 
-    const insertedId = await db.addMileageLog(
-      vehicleId,
-      mileage,
-      action,     // ✅ TO JEST KLUCZ
-      eventdate
-    );
-
-    res.json({
+    res.json({ 
       success: true,
-      id: insertedId,
+      id: insertedId || null,
       mileage,
-      action,
-      eventdate
+      event,
+      eventDate
     });
-
-} catch (err) {
-  console.error('🔥 BŁĄD PRZY ZAPISIE PRZEBIEGU 🔥');
-  console.error(err);
-  console.error(err.message);
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: err.message || 'Błąd serwera'
-  });
-}
+  } catch (err) {
+    console.error('Błąd przy zapisie przebiegu:', err);
+    res.status(500).json({ success: false, error: 'Błąd serwera' });
+  }
 });
-
-
-
-
+app.get('/vehicle/:id/mileage', async (req, res) => {
+  try {
+    const logs = await db.getMileageLogs(req.params.id);
+    res.json(logs);
+  } catch (err) {
+    console.error('Błąd przy pobieraniu historii przebiegów:', err);
+    res.status(500).json({ error: 'Błąd serwera' });
+  }
+});
 
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
@@ -419,8 +366,8 @@ app.get('/export/excel', async (req, res) => {
       { header: 'Data przeglądu', key: 'inspectionDate', width: 15 },
       { header: 'Email przypomnienia', key: 'reminderEmail', width: 25 },
       { header: 'Przebieg', key: 'mileage', width: 12 },
-      { header: 'Zdarzenie', key: 'action', width: 25 },
-      { header: 'Data zdarzenia', key: 'eventdate', width: 15 }
+      { header: 'Zdarzenie', key: 'event', width: 25 },
+      { header: 'Data zdarzenia', key: 'eventDate', width: 15 }
     ];
 
     // Styl nagłówka
@@ -447,13 +394,13 @@ app.get('/export/excel', async (req, res) => {
         logs.forEach(log => {
           sheet.addRow({
             mileage: log.mileage,
-            action: log.action,
-            eventdate: log.eventdate
+            event: log.event,
+            eventDate: log.eventDate
           });
         });
       } else {
         // Jeśli brak historii — wstaw pustą linię
-        sheet.addRow({ action: 'Brak zdarzeń' });
+        sheet.addRow({ event: 'Brak zdarzeń' });
       }
 
       // Pusta linia odstępu
@@ -517,7 +464,7 @@ app.get('/export/pdf', async (req, res) => {
         doc.fontSize(10).fillColor('black');
         logs.forEach(log => {
           doc.text(
-            `• ${log.eventdate || ''} | ${log.mileage} km | ${log.action || ''}`
+            `• ${log.eventDate || ''} | ${log.mileage} km | ${log.event || ''}`
           );
         });
       } else {
@@ -535,29 +482,3 @@ app.get('/export/pdf', async (req, res) => {
     res.status(500).send('Błąd eksportu do PDF');
   }
 });
-
-//czyszczenie tabeli rejestru:
-app.get('/wipe-mileage', async (req, res) => {
-  try {
-    await db.wipeMileageLogs();
-    res.send('mileage_logs wyczyszczone');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err.message);
-  }
-});
-//czyszczenie tabeli wszystkich:
-app.get('/wipe-all', async (req, res) => {
-  try {
-    await db.wipeMileageLogs();
-    await db.vehicles();
-    res.send('wszystkie tabele wyczyszczone');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err.message);
-  }
-});
-
-
-
-
