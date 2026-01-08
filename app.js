@@ -335,13 +335,13 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
     const vehicleId = Number(req.params.id);
     const mileage = Number(req.body.mileage);
     const action = req.body.action;
-    const eventDate = req.body.eventDate;
+    const eventdate = req.body.eventdate;
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    if (!action || !eventDate) {
+    if (!action || !eventdate) {
       return res.status(400).json({ success: false, error: 'Brak danych czynności' });
     }
 
@@ -349,7 +349,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
       vehicleId,
       mileage,
       action,     // ✅ TO JEST KLUCZ
-      eventDate
+      eventdate
     );
 
     res.json({
@@ -357,7 +357,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
       id: insertedId,
       mileage,
       action,
-      eventDate
+      eventdate
     });
 
 } catch (err) {
@@ -400,8 +400,8 @@ app.get('/export/excel', async (req, res) => {
       { header: 'Data przeglądu', key: 'inspectionDate', width: 15 },
       { header: 'Email przypomnienia', key: 'reminderEmail', width: 25 },
       { header: 'Przebieg', key: 'mileage', width: 12 },
-      { header: 'Zdarzenie', key: 'event', width: 25 },
-      { header: 'Data zdarzenia', key: 'eventDate', width: 15 }
+      { header: 'Zdarzenie', key: 'action', width: 25 },
+      { header: 'Data zdarzenia', key: 'eventdate', width: 15 }
     ];
 
     // Styl nagłówka
@@ -429,7 +429,7 @@ app.get('/export/excel', async (req, res) => {
           sheet.addRow({
             mileage: log.mileage,
             action: log.action,
-            eventDate: log.eventDate
+            eventdate: log.eventdate
           });
         });
       } else {
@@ -498,7 +498,7 @@ app.get('/export/pdf', async (req, res) => {
         doc.fontSize(10).fillColor('black');
         logs.forEach(log => {
           doc.text(
-            `• ${log.eventDate || ''} | ${log.mileage} km | ${log.action || ''}`
+            `• ${log.eventdate || ''} | ${log.mileage} km | ${log.action || ''}`
           );
         });
       } else {
