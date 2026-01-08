@@ -614,7 +614,7 @@ const html = `
 <div class="vehicle-form-events">
   <h3>Dodaj przebieg / czynność</h3>
   <div class="event-row">
-    <input type="date" id="neweventdate" placeholder="Data" />
+    <input type="date" id="newEventDate" placeholder="Data" />
     <input type="number" id="newMileage" placeholder="Przebieg (km)" min="1" />
   </div>
   <input type="text" id="newEvent" placeholder="Czynność (np. wymiana oleju)" class="event-field" />
@@ -665,10 +665,9 @@ fetch(`/vehicle/${id}/mileage`)
     const tbody = document.querySelector('#mileageTable tbody');
 
     // Wyczyść tbody, jeśli jest puste lub zawiera "Brak wpisów"
-const firstTd = tbody.querySelector('td');
-if (firstTd && firstTd.textContent === 'Brak wpisów') {
-    tbody.innerHTML = '';
-}
+    if (!tbody.innerHTML.trim() || tbody.querySelector('td')?.textContent === 'Brak wpisów') {
+        tbody.innerHTML = '';
+    }
 
     if (data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
@@ -680,7 +679,7 @@ if (firstTd && firstTd.textContent === 'Brak wpisów') {
 data.forEach(item => {
     tbody.insertAdjacentHTML('beforeend', `
         <tr>
-            <td>${item.eventdate}</td>
+            <td>${item.event_date}</td>
             <td>${item.mileage} km</td>
             <td>${item.action}</td>
         </tr>
@@ -695,10 +694,10 @@ data.forEach(item => {
 document.getElementById('addMileageBtn').addEventListener('click', (e) => {
     e.preventDefault();
     const newMileage = document.getElementById('newMileage').value;
-    const neweventdate = document.getElementById('neweventdate').value;
+    const newEventDate = document.getElementById('newEventDate').value;
     const newEvent = document.getElementById('newEvent').value;
 
-    if (!neweventdate) return alert('Podaj datę czynności.');
+    if (!newEventDate) return alert('Podaj datę czynności.');
     if (!newMileage || newMileage <= 0) return alert('Podaj prawidłowy przebieg.');
     if (!newEvent) return alert('Podaj opis czynności.');
 
@@ -708,8 +707,8 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             mileage: newMileage,
-            action: newEvent,
-            eventdate: neweventdate
+            event: newEvent,
+            eventDate: newEventDate
         })
     })
     .then(res => res.json())
@@ -723,16 +722,16 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         }
         tbody.insertAdjacentHTML('afterbegin', `
             <tr>
-                <td>${data.eventdate}</td>
+                <td>${data.eventDate}</td>
                 <td>${data.mileage} km</td>
-                <td>${data.action}</td>
+                <td>${data.event}</td>
             </tr>
         `);
 
       // Wyczyść pola
       document.getElementById('newMileage').value = '';
       document.getElementById('newEvent').value = '';
-      document.getElementById('neweventdate').value = '';
+      document.getElementById('newEventDate').value = '';
     })
     .catch(err => alert(err.message));
 });
