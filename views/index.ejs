@@ -665,9 +665,10 @@ fetch(`/vehicle/${id}/mileage`)
     const tbody = document.querySelector('#mileageTable tbody');
 
     // Wyczyść tbody, jeśli jest puste lub zawiera "Brak wpisów"
-    if (!tbody.innerHTML.trim() || tbody.querySelector('td')?.textContent === 'Brak wpisów') {
-        tbody.innerHTML = '';
-    }
+const firstTd = tbody.querySelector('td');
+if (firstTd && firstTd.textContent === 'Brak wpisów') {
+    tbody.innerHTML = '';
+}
 
     if (data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
