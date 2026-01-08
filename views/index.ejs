@@ -679,7 +679,7 @@ fetch(`/vehicle/${id}/mileage`)
 data.forEach(item => {
     tbody.insertAdjacentHTML('beforeend', `
         <tr>
-            <td>${item.eventDate}</td>
+            <td>${item.event_date}</td>
             <td>${item.mileage} km</td>
             <td>${item.action}</td>
         </tr>
@@ -707,7 +707,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             mileage: newMileage,
-            action: newEvent,
+            event: newEvent,
             eventDate: newEventDate
         })
     })
@@ -724,7 +724,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
             <tr>
                 <td>${data.eventDate}</td>
                 <td>${data.mileage} km</td>
-                <td>${data.action}</td>
+                <td>${data.event}</td>
             </tr>
         `);
 
