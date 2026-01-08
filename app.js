@@ -68,31 +68,6 @@ app.use(session({
   cookie: { secure: false } // true tylko przy HTTPS
 }));
 
-
-// Trasa czyszczenia tylko czynności
-app.get('/clean', async (req, res) => {
-  try {
-    await db.pool.query('DELETE FROM mileage_logs');
-    res.send('Tabela czynności została wyczyszczona ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu tabeli czynności ❌');
-  }
-});
-
-// Trasa czyszczenia całej bazy
-app.get('/cleanall', async (req, res) => {
-  try {
-    await db.pool.query('DELETE FROM mileage_logs');
-    await db.pool.query('DELETE FROM vehicles');
-    res.send('Cała baza danych została wyczyszczona ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu całej bazy ❌');
-  }
-});
-
-
 //dodane do obslugi zdjec
 const multer = require('multer');
 
@@ -336,7 +311,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
     const vehicleId = req.params.id;
     const mileage = Number(req.body.mileage);
     const event = req.body.event || '';
-    const newEventDate = document.getElementById('newEventDate').value; // np. '2026-01-06'
+    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0];
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
@@ -507,26 +482,3 @@ app.get('/export/pdf', async (req, res) => {
     res.status(500).send('Błąd eksportu do PDF');
   }
 });
-
-//czyszczenie tabeli rejestru:
-app.get('/wipe-mileage', async (req, res) => {
-  try {
-    await db.wipeMileageLogs();
-    res.send('mileage_logs wyczyszczone');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err.message);
-  }
-});
-//czyszczenie tabeli wszystkich:
-app.get('/wipe-all', async (req, res) => {
-  try {
-    await db.wipeMileageLogs();
-    await db.vehicles();
-    res.send('wszystkie tabele wyczyszczone');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err.message);
-  }
-});
-
