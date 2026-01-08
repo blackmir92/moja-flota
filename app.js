@@ -372,16 +372,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
 }
 });
 
-} catch (err) {
-  console.error('🔥 BŁĄD PRZY ZAPISIE PRZEBIEGU 🔥');
-  console.error(err);
-  console.error(err.message);
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: err.message || 'Błąd serwera'
-  });
-}
+
 
 
 
