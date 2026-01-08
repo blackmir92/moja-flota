@@ -92,6 +92,25 @@ app.get('/cleanall', async (req, res) => {
   }
 });
 
+// --- TU WKLEJAMY RESET TABLE ---
+app.get('/reset-mileage-table', async (req, res) => {
+  try {
+    await db.pool.query('DROP TABLE IF EXISTS mileage_logs');
+    await db.pool.query(`
+      CREATE TABLE mileage_logs (
+        id SERIAL PRIMARY KEY,
+        vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
+        mileage INTEGER,
+        action TEXT,
+        eventdate DATE
+      )
+    `);
+    res.send('Tabela mileage_logs została zresetowana ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy resetowaniu tabeli ❌\n' + err.message);
+  }
+});
 
 //dodane do obslugi zdjec
 const multer = require('multer');
@@ -540,20 +559,5 @@ app.get('/wipe-all', async (req, res) => {
 });
 
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
 
-async function renameColumn() {
-  try {
-    await pool.query('ALTER TABLE mileage_logs RENAME COLUMN "eventDate" TO eventdate');
-    console.log('Kolumna eventDate zmieniona na eventdate ✅');
-  } catch (err) {
-    console.error(err);
-  } finally {
-    await pool.end();
-  }
-}
 
-renameColumn();
