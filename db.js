@@ -37,7 +37,7 @@ async function initDB() {
       vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
       mileage INTEGER,
       action TEXT,
-      eventDate DATE
+      eventdate DATE
     )
   `);
 }
@@ -129,12 +129,12 @@ function getMileageLogs(vehicleId) {
   ).then(res => res.rows);
 }
 
-function addMileageLog(vehicleId, mileage, action, eventDate) {
+function addMileageLog(vehicleId, mileage, action, eventdate) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
 
   return pool.query(
-    'INSERT INTO mileage_logs (vehicle_id, mileage, action, eventDate) VALUES ($1, $2, $3, $4) RETURNING id',
-    [vehicleId, mileageInt, action, eventDate]  // eventDate musi być 'YYYY-MM-DD'
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action, eventdate) VALUES ($1, $2, $3, $4) RETURNING id',
+    [vehicleId, mileageInt, action, eventdate]  // eventDate musi być 'YYYY-MM-DD'
   ).then(res => res.rows[0].id);
 }
 
