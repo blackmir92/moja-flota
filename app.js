@@ -539,3 +539,21 @@ app.get('/wipe-all', async (req, res) => {
   }
 });
 
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+async function renameColumn() {
+  try {
+    await pool.query('ALTER TABLE mileage_logs RENAME COLUMN "eventDate" TO eventdate');
+    console.log('Kolumna eventDate zmieniona na eventdate ✅');
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await pool.end();
+  }
+}
+
+renameColumn();
