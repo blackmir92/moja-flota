@@ -614,7 +614,7 @@ const html = `
 <div class="vehicle-form-events">
   <h3>Dodaj przebieg / czynność</h3>
   <div class="event-row">
-    <input type="date" id="newEventdate" placeholder="Data" />
+    <input type="date" id="neweventdate" placeholder="Data" />
     <input type="number" id="newMileage" placeholder="Przebieg (km)" min="1" />
   </div>
   <input type="text" id="newEvent" placeholder="Czynność (np. wymiana oleju)" class="event-field" />
@@ -694,10 +694,10 @@ data.forEach(item => {
 document.getElementById('addMileageBtn').addEventListener('click', (e) => {
     e.preventDefault();
     const newMileage = document.getElementById('newMileage').value;
-    const newEventdate = document.getElementById('newEventdate').value;
+    const neweventdate = document.getElementById('neweventdate').value;
     const newEvent = document.getElementById('newEvent').value;
 
-    if (!newEventdate) return alert('Podaj datę czynności.');
+    if (!neweventdate) return alert('Podaj datę czynności.');
     if (!newMileage || newMileage <= 0) return alert('Podaj prawidłowy przebieg.');
     if (!newEvent) return alert('Podaj opis czynności.');
 
@@ -708,7 +708,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
         body: JSON.stringify({
             mileage: newMileage,
             action: newEvent,
-            eventdate: newEventdate
+            eventdate: neweventdate
         })
     })
     .then(res => res.json())
@@ -731,7 +731,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
       // Wyczyść pola
       document.getElementById('newMileage').value = '';
       document.getElementById('newEvent').value = '';
-      document.getElementById('newEventdate').value = '';
+      document.getElementById('neweventdate').value = '';
     })
     .catch(err => alert(err.message));
 });
