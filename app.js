@@ -330,32 +330,31 @@ app.get("/", async (req, res) => {
 });
 
 
-// Zapis przebiegu z czynnością i datą
 app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
-    const vehicleId = req.params.id;
+    const vehicleId = Number(req.params.id);
     const mileage = Number(req.body.mileage);
-    const action = req.body.action || '';
-    const eventDate = req.body.eventDate; // ⬅️ z frontendu
+    const action = req.body.action;
+    const eventDate = req.body.eventDate;
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    if (!eventDate) {
-      return res.status(400).json({ success: false, error: 'Brak daty czynności' });
+    if (!action || !eventDate) {
+      return res.status(400).json({ success: false, error: 'Brak danych czynności' });
     }
 
     const insertedId = await db.addMileageLog(
       vehicleId,
       mileage,
-      action,
+      action,     // ✅ TO JEST KLUCZ
       eventDate
     );
 
     res.json({
       success: true,
-      id: insertedId || null,
+      id: insertedId,
       mileage,
       action,
       eventDate
@@ -363,9 +362,10 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
 
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
-    res.status(500).json({ success: false, error: 'Błąd serwera' });
+    res.status(500).json({ success: false, error: 'Bllad serwera' });
   }
 });
+
 
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
