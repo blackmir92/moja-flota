@@ -337,7 +337,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
 
     // Odczyt danych z formularza lub fetch JSON z frontend
     const mileage = Number(req.body.mileage);
-    const event = req.body.event || '';
+    const action = req.body.action || '';
     const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0]; // domyślnie dzisiaj, jeśli brak
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
@@ -345,14 +345,14 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
     }
 
     // Zapis do bazy
-    const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
+    const insertedId = await db.addMileageLog(vehicleId, mileage, action, eventDate);
 
     // Zwracamy odpowiedź JSON
     res.json({ 
       success: true,
       id: insertedId || null,
       mileage,
-      event,
+      acton,
       eventDate
     });
   } catch (err) {
