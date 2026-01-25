@@ -665,9 +665,10 @@ fetch(`/vehicle/${id}/mileage`)
     const tbody = document.querySelector('#mileageTable tbody');
 
     // Wyczyść tbody, jeśli jest puste lub zawiera "Brak wpisów"
-    if (!tbody.innerHTML.trim() || tbody.querySelector('td')?.textContent === 'Brak wpisów') {
-        tbody.innerHTML = '';
-    }
+const firstTd = tbody.querySelector('td');
+if (firstTd && firstTd.textContent === 'Brak wpisów') {
+    tbody.innerHTML = '';
+}
 
     if (data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
@@ -870,12 +871,12 @@ document.addEventListener('click', async (e) => {
   if (e.target.classList.contains('edit-log')) {
     const id = e.target.dataset.id;
     const mileage = prompt('Podaj nowy przebieg:');
-    const event = prompt('Podaj nową czynność:');
+    const action = prompt('Podaj nową czynność:');
     if (mileage) {
       const res = await fetch(`/mileage/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mileage, event })
+        body: JSON.stringify({ mileage, action})
       });
       const result = await res.json();
       if (result.success) {
