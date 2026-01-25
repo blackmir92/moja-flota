@@ -334,17 +334,20 @@ app.get("/", async (req, res) => {
 app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
     const vehicleId = req.params.id;
+
+    // Odczyt danych z formularza lub fetch JSON z frontend
     const mileage = Number(req.body.mileage);
     const event = req.body.event || '';
-    const newEventDate = document.getElementById('newEventDate').value; // np. '2026-01-06'
+    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0]; // domyślnie dzisiaj, jeśli brak
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
     }
 
-    // Teraz zapisujemy przebieg razem z czynnością i datą
+    // Zapis do bazy
     const insertedId = await db.addMileageLog(vehicleId, mileage, event, eventDate);
 
+    // Zwracamy odpowiedź JSON
     res.json({ 
       success: true,
       id: insertedId || null,
@@ -355,15 +358,6 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
     res.status(500).json({ success: false, error: 'Błąd serwera' });
-  }
-});
-app.get('/vehicle/:id/mileage', async (req, res) => {
-  try {
-    const logs = await db.getMileageLogs(req.params.id);
-    res.json(logs);
-  } catch (err) {
-    console.error('Błąd przy pobieraniu historii przebiegów:', err);
-    res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
