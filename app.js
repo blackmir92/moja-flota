@@ -352,7 +352,7 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
       success: true,
       id: insertedId || null,
       mileage,
-      acton,
+      action,
       eventDate
     });
   } catch (err) {
