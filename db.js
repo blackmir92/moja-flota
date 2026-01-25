@@ -37,7 +37,7 @@ async function initDB() {
       vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
       mileage INTEGER,
       action TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      eventDate DATE
     )
   `);
 }
@@ -124,18 +124,20 @@ function getGarages() {
 
 function getMileageLogs(vehicleId) {
   return pool.query(
-    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY created_at DESC',
+    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY mileage DESC',
     [vehicleId]
   ).then(res => res.rows);
 }
 
-function addMileageLog(vehicleId, mileage, action) {
+function addMileageLog(vehicleId, mileage, event, eventDate) {
   const mileageInt = mileage === "" ? null : parseInt(mileage, 10);
+
   return pool.query(
-    'INSERT INTO mileage_logs (vehicle_id, mileage, action) VALUES ($1,$2,$3)',
-    [vehicleId, mileageInt, action]
-  );
+    'INSERT INTO mileage_logs (vehicle_id, mileage, action, eventDate) VALUES ($1, $2, $3, $4) RETURNING id',
+    [vehicleId, mileageInt, event, eventDate]  // eventDate musi być 'YYYY-MM-DD'
+  ).then(res => res.rows[0].id);
 }
+
 function updateVehicleReminders(id, data) {
   const { insuranceDate, inspectionDate, reminderEmail, policyNumber } = data;
 
@@ -154,20 +156,50 @@ function updateVehicleReminders(id, data) {
     id
   ]);
 }
+
+// app.js
+const express = require('express');
+const app = express();
+const db = require('./db'); // Twój moduł db.js z PostgreSQL
+
+// --- Czyści tylko tabelę mileage_logs ---
+app.get('/clean', async (req, res) => {
+  try {
+    await db.pool.query('DELETE FROM mileage_logs'); // PostgreSQL
+    res.send('Tabela czynności została wyczyszczona ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu tabeli czynności ❌');
+  }
+});
+
+// --- Czyści całą bazę pojazdów i czynności ---
+app.get('/cleanall', async (req, res) => {
+  try {
+    await db.pool.query('DELETE FROM mileage_logs');
+    await db.pool.query('DELETE FROM vehicles');
+    res.send('Cała baza danych została wyczyszczona ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Błąd przy czyszczeniu całej bazy ❌');
+  }
+});
+
 /* =======================
    ALIASY DLA KOMPATYBILNOŚCI
 ======================= */
 
 module.exports = {
+  pool,  // <- teraz możesz użyć pool.query() w app.js
   getVehicles,
-  getAllVehicles: getVehicles,           // alias dla starego kodu
+  getAllVehicles: getVehicles,
   getVehicleById,
   addVehicle,
   updateVehicle,
-  updateVehicleDetails: updateVehicle,   // alias dla starego kodu
+  updateVehicleDetails: updateVehicle,
   deleteVehicle,
   getGarages,
   getMileageLogs,
   addMileageLog,
-  updateVehicleReminders
+  updateVehicleReminders,
 };
