@@ -413,13 +413,13 @@ app.get('/export/excel', async (req, res) => {
         logs.forEach(log => {
           sheet.addRow({
             mileage: log.mileage,
-            event: log.event,
+            acton: log.action,
             eventDate: log.eventDate
           });
         });
       } else {
         // Jeśli brak historii — wstaw pustą linię
-        sheet.addRow({ event: 'Brak zdarzeń' });
+        sheet.addRow({ action: 'Brak zdarzeń' });
       }
 
       // Pusta linia odstępu
@@ -483,7 +483,7 @@ app.get('/export/pdf', async (req, res) => {
         doc.fontSize(10).fillColor('black');
         logs.forEach(log => {
           doc.text(
-            `• ${log.eventDate || ''} | ${log.mileage} km | ${log.event || ''}`
+            `• ${log.eventDate || ''} | ${log.mileage} km | ${log.action || ''}`
           );
         });
       } else {
