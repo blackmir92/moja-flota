@@ -659,7 +659,7 @@ if (vehicleForm) {
 
 
 // Załaduj historię po wstawieniu HTML
-fetch(`/vehicle/${id}/mileage`)
+fetch(`/vehicle/${currentVehicleId}/mileage`)
   .then(res => res.json())
   .then(data => {
     const tbody = document.querySelector('#mileageTable tbody');
@@ -702,7 +702,7 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
     if (!newEvent) return alert('Podaj opis czynności.');
 
 
-    fetch(`/vehicle/${id}/mileage`, {
+    fetch(`/vehicle/${currentVehicleId}/mileage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -717,9 +717,10 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
 
         // Dodaj nowy wpis na górę tabeli
         const tbody = document.querySelector('#mileageTable tbody');
-        if (tbody.querySelector('td').textContent === 'Brak wpisów') {
-            tbody.innerHTML = '';
-        }
+const firstTd = tbody.querySelector('td');
+if (firstTd && firstTd.textContent === 'Brak wpisów') {
+  tbody.innerHTML = '';
+}
         tbody.insertAdjacentHTML('afterbegin', `
             <tr>
                 <td>${data.eventdate}</td>
@@ -735,8 +736,6 @@ document.getElementById('addMileageBtn').addEventListener('click', (e) => {
     })
     .catch(err => alert(err.message));
 });
-});
-
     }
 
     // Zapisz zmiany edytowanego pojazdu
