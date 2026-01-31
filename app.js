@@ -114,7 +114,9 @@ app.use(express.json());
 //dodane do obslugi zdjec
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, 'uploads/');
+    // Używamy __dirname, żeby wskazać dokładnie ten folder, gdzie jest app.js
+    // To tutaj Render "montuje" Twój dysk trwały.
+    cb(null, path.join(__dirname, 'uploads'));
   },
   filename: function(req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname));
