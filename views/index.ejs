@@ -813,47 +813,57 @@ if (firstTd && firstTd.textContent === 'Brak wpisów') {
       });
     });
 
-        // Obsługa przesyłania zdjęcia pojazdu
-    document.addEventListener('submit', function (event) {
-      if (event.target && event.target.id === 'uploadForm') {
-        event.preventDefault();
 
-        const formData = new FormData(event.target);
-        fetch(`/upload/${currentVehicleId}`, {
-          method: 'POST',
-          body: formData,
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error('Błąd podczas przesyłania pliku.');
-            return res.json();
-          })
-          .then((data) => {
-            if (data.success && data.imagePath) {
-              // Zaktualizuj zdjęcie w szczegółach pojazdu i kafelku
-              const newImageUrl = `/uploads/${data.imagePath}`;
-const hiddenInput = document.getElementById('imagePathHidden');
-if (hiddenInput) hiddenInput.value = data.imagePath;
-              const cardImg = document
-                .getElementById(`vehicle-card-${currentVehicleId}`)
-                ?.querySelector('img');
-              if (cardImg) {
-                cardImg.src = newImageUrl;
-              }
+// ✅ KOMPLEKSOWA OBSŁUGA PRZESYŁANIA ZDJĘCIA + AUTO-ZAPIS
+document.addEventListener('submit', function (event) {
+  if (event.target && event.target.id === 'uploadForm') {
+    event.preventDefault();
 
-              const detailImg = document
-                .querySelector('#vehicle-details img');
-              if (detailImg) {
-                detailImg.src = newImageUrl;
-              }
-            }
-          })
-          .catch((error) => {
-            console.error('Błąd podczas uploadu:', error);
-            alert('❌ Nie udało się przesłać zdjęcia.');
-          });
-      }
-    });
+    const formData = new FormData(event.target);
+    fetch(`/upload/${currentVehicleId}`, {
+      method: 'POST',
+      body: formData,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Błąd podczas przesyłania pliku.');
+        return res.json();
+      })
+      .then((data) => {
+        if (data.success && data.imagePath) {
+          const newImageUrl = `/uploads/${data.imagePath}`;
 
+          // 1. Aktualizacja ukrytego pola (do przyszłych zapisów formularza)
+          const hiddenInput = document.getElementById('imagePathHidden');
+          if (hiddenInput) {
+            hiddenInput.value = data.imagePath;
+          }
+
+          // 2. Aktualizacja zdjęcia w kafelku po lewej
+          const card = document.getElementById(`vehicle-card-${currentVehicleId}`);
+          const cardImg = card?.querySelector('img');
+          if (cardImg) {
+            cardImg.src = newImageUrl;
+          }
+
+          // 3. Aktualizacja zdjęcia w szczegółach (prawa kolumna)
+          const detailImg = document.getElementById('mainVehicleImage');
+          if (detailImg) {
+            detailImg.src = newImageUrl;
+          }
+
+          // 4. AUTO-ZAPIS: Wywołujemy funkcję saveVehicle, aby baza na pewno zapamiętała nazwę
+          // Dzięki temu użytkownik nie musi klikać "Zapisz dane pojazdu" po wgraniu zdjęcia.
+          saveVehicle(currentVehicleId);
+          
+          alert('Zdjęcie wgrane i zapisane w bazie ✅');
+        }
+      })
+      .catch((error) => {
+        console.error('Błąd podczas uploadu:', error);
+        alert('❌ Nie udało się przesłać zdjęcia.');
+      });
+  }
+});
     // Obsługa usuwania
 document.addEventListener('click', async (e) => {
   if (e.target.classList.contains('delete-log')) {
@@ -892,15 +902,22 @@ async function saveVehicle(id) {
   const formData = new FormData(form);
   const data = Object.fromEntries(formData.entries());
 
+const hiddenImagePath = document.getElementById('imagePathHidden').value;
+  data.imagePath = hiddenImagePath;
+
+  console.log("Wysyłam dane do zapisu:", data); // Sprawdź w konsoli (F12), czy jest tu imagePath
+
   const res = await fetch(`/edit/vehicle/${id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
 
-  const result = await res.json();
+const result = await res.json();
   if (result.success) {
     alert('Dane pojazdu zapisane ✅');
+    // Aktualizujemy kafelek na liście, żeby też pamiętał o nowym zdjęciu
+    updateVehicleCard(id, data);
   } else {
     alert('Błąd: ' + result.message);
   }
