@@ -537,14 +537,13 @@ h3 {
 
 const html = `
 <div class="vehicle-form-container">
-
-  <!-- Lewa kolumna: formularz -->
   <div class="vehicle-form-left">
     <form id="vehicleForm">
-<input type="hidden" id="imagePathHidden" name="imagePath" value="${vehicle.imagepath || ''}" />
-  
-  <div class="vehicle-main-info">
+      <input type="hidden" id="imagePathHidden" name="imagePath" value="${vehicle.imagepath || vehicle.imagePath || ''}" />
+      <input type="hidden" name="id" value="${vehicle.id}" />
+
       <div class="vehicle-main-info">
+        <h3>Dane pojazdu</h3>
         <label for="brand">Marka:</label>
         <input type="text" id="brand" name="brand" value="${vehicle.brand || ''}" required />
 
