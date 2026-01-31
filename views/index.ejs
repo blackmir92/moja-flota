@@ -488,7 +488,7 @@ h3 {
 
     <% vehicles.forEach(vehicle => { %>
       <div id="vehicle-card-<%= vehicle.id %>" class="vehicle-card" data-garage="<%= vehicle.garage %>" data-id="<%= vehicle.id %>">
-        <img src="<%= vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/uploads/fred.jpg' %>" alt="Zdjęcie pojazdu">
+        <img src="<%= vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/fred.jpg' %>" alt="Zdjęcie pojazdu">
         <strong><%= vehicle.brand %> <%= vehicle.model %></strong>
         <span class="vehicle-garage">Garaż: <%= vehicle.garage %></span>
         <button class="vehicle-button" data-id="<%= vehicle.id %>">Wyświetl szczegóły pojazdu</button>
@@ -599,7 +599,7 @@ const html = `
 
   <!-- Prawa kolumna: zdjęcie + upload -->
   <div class="vehicle-form-right">
-    <img src="${vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/uploads/fred.jpg'}" alt="Zdjęcie pojazdu">
+    <img src="${vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/fred.jpg'}" alt="Zdjęcie pojazdu">
  <form id="uploadForm" style="margin-top: 12px; width: 100%; display: flex; flex-direction: column; gap: 8px;">
   <input type="file" name="image" accept="image/*">
   <button type="submit" style="width: 100%; padding: 10px; border: none; border-radius: 12px; background: #2196F3; color: white; font-weight: 600; cursor: pointer;">
