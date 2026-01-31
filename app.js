@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const fs = require('fs');
+const path = require('path');
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
@@ -112,11 +114,14 @@ app.use(express.json());
 
 
 //dodane do obslugi zdjec
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    // Używamy __dirname, żeby wskazać dokładnie ten folder, gdzie jest app.js
-    // To tutaj Render "montuje" Twój dysk trwały.
-    cb(null, path.join(__dirname, 'uploads'));
+const uploadPath = path.join(__dirname, 'uploads');
+
+    // Sprawdzamy, czy folder istnieje, jak nie to go tworzymy (dla bezpieczeństwa)
+    if (!fs.existsSync(uploadPath)){
+        fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    cb(null, uploadPath);
   },
   filename: function(req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname));
