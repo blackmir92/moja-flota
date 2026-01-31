@@ -486,17 +486,21 @@ h3 {
     </select>
 
 
-    <% vehicles.forEach(vehicle => { %>
+
+<% vehicles.forEach(vehicle => { %>
+      <% 
+        // Sprawdzamy oba warianty nazwy pola, bo baza PostgreSQL zwraca małe litery
+        const currentImg = vehicle.imagepath || vehicle.imagePath; 
+      %>
       <div id="vehicle-card-<%= vehicle.id %>" class="vehicle-card" data-garage="<%= vehicle.garage %>" data-id="<%= vehicle.id %>">
-        <img src="<%= vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/fred.jpg' %>" alt="Zdjęcie pojazdu">
+        <img src="<%= currentImg ? '/uploads/' + currentImg : '/fred.jpg' %>" alt="Zdjęcie pojazdu">
         <strong><%= vehicle.brand %> <%= vehicle.model %></strong>
         <span class="vehicle-garage">Garaż: <%= vehicle.garage %></span>
         <button class="vehicle-button" data-id="<%= vehicle.id %>">Wyświetl szczegóły pojazdu</button>
       </div>
     <% }) %>
-        <a href="/export/excel" style="background: #2196F3;">📊 Eksport do Excel</a>
+    <a href="/export/excel" style="background: #2196F3;">📊 Eksport do Excel</a>
     <a href="/export/pdf" style="background: #f44336;">📄 Eksport do PDF</a>
-  </div>
 
   <!-- Prawa kolumna -->
   <div id="vehicle-details-container">
