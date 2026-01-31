@@ -663,32 +663,31 @@ fetch(`/vehicle/${id}/mileage`)
   .then(res => res.json())
   .then(data => {
     const tbody = document.querySelector('#mileageTable tbody');
+    if (!tbody) return;
 
-    // Wyczyść tbody, jeśli jest puste lub zawiera "Brak wpisów"
-const firstTd = tbody.querySelector('td');
-if (firstTd && firstTd.textContent === 'Brak wpisów') {
+    // Wyczyść tbody (na start zawsze czyścimy)
     tbody.innerHTML = '';
-}
 
-    if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
-        return;
+    // Jeśli brak danych – pokaż komunikat
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3">Brak wpisów</td></tr>';
+      return;
     }
 
-    // Dodaj wpisy do tabeli
-    data.sort((a, b) => b.mileage - a.mileage);
-data.forEach(item => {
-    tbody.insertAdjacentHTML('beforeend', `
+    // Wstaw wpisy
+    data.forEach(row => {
+      tbody.insertAdjacentHTML('beforeend', `
         <tr>
-            <td>${item.eventDate}</td>
-            <td>${item.mileage} km</td>
-            <td>${item.action}</td>
+          <td>${row.eventDate}</td>
+          <td>${row.mileage} km</td>
+          <td>${row.action}</td>
         </tr>
-    `);
-});
-
+      `);
+    });
   })
-  .catch(err => console.error(err));
+  .catch(err => {
+    console.error('Błąd ładowania historii:', err);
+  });
 
 
 // Obsługa dodawania przebiegu i czynności
