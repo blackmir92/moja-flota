@@ -541,6 +541,9 @@ const html = `
   <!-- Lewa kolumna: formularz -->
   <div class="vehicle-form-left">
     <form id="vehicleForm">
+<input type="hidden" id="imagePathHidden" name="imagePath" value="${vehicle.imagepath || ''}" />
+  
+  <div class="vehicle-main-info">
       <div class="vehicle-main-info">
         <label for="brand">Marka:</label>
         <input type="text" id="brand" name="brand" value="${vehicle.brand || ''}" required />
@@ -829,7 +832,8 @@ if (firstTd && firstTd.textContent === 'Brak wpisów') {
             if (data.success && data.imagePath) {
               // Zaktualizuj zdjęcie w szczegółach pojazdu i kafelku
               const newImageUrl = `/uploads/${data.imagePath}`;
-
+const hiddenInput = document.getElementById('imagePathHidden');
+if (hiddenInput) hiddenInput.value = data.imagePath;
               const cardImg = document
                 .getElementById(`vehicle-card-${currentVehicleId}`)
                 ?.querySelector('img');
