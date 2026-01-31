@@ -329,6 +329,17 @@ app.get("/", async (req, res) => {
   }
 });
 
+app.get('/vehicle/:id/mileage', async (req, res) => {
+  try {
+    const id = req.params.id;
+    // Używamy tej samej funkcji db, której używasz przy eksporcie do Excela
+    const logs = await db.getMileageLogs(id);
+    res.json(logs);
+  } catch (err) {
+    console.error("Błąd pobierania historii:", err);
+    res.status(500).json({ error: "Błąd serwera" });
+  }
+});
 
 // Zapis przebiegu z czynnością i datą
 app.post('/vehicle/:id/mileage', async (req, res) => {
