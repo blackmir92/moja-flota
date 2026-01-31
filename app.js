@@ -195,7 +195,7 @@ app.post('/edit/vehicle/:id', async (req, res) => {
   const id = req.params.id;
   
   // Pola, które DOZWOLONO edytować w tym formularzu (bez dat)
-  const allowedFields = ['brand', 'model', 'garage', 'vin', 'year', 'note', 'event', 'imagePath'];
+  const allowedFields = ['brand', 'model', 'garage', 'vin', 'year', 'note', 'plate', 'imagePath'];
   
   const updates = {};
   Object.keys(req.body).forEach(key => {
@@ -220,7 +220,8 @@ app.post('/edit/vehicle/:id', async (req, res) => {
         insuranceDate: currentVehicle.insuranceDate || currentVehicle.insurancedate,
         inspectionDate: currentVehicle.inspectionDate || currentVehicle.inspectiondate,
         reminderEmail: currentVehicle.reminderEmail || currentVehicle.reminderemail,
-        policyNumber: currentVehicle.policyNumber || currentVehicle.policynumber
+        policyNumber: currentVehicle.policyNumber || currentVehicle.policynumber,
+      plate: currentVehicle.plate
     };
 
     // 3. Łączymy naprawiony stary obiekt z nowymi zmianami
