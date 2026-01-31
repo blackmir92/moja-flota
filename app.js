@@ -13,7 +13,6 @@ app.listen(PORT, () => {
 
 
 const session = require('express-session');
-const path = require('path');
 
 
 // konfiguracja sesji
@@ -101,7 +100,11 @@ const multer = require('multer');
 
 
 // Ustawiamy katalog z plikami statycznymi (np. style.css)
-app.use(express.static('public'));
+// ✅ TO JEST TA LINIA (zabezpieczona path.join):
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Statyczna ścieżka do zdjęć (to już miałeś)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 //statyczna ścieżka do zdjęć
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
