@@ -273,13 +273,44 @@ app.get('/vehicle/:id', async (req, res) => {
   res.render('vehicle', { vehicle });
 });
 
-//dodane do obsugi zdjec
+// ✅ POPRAWIONA OBSŁUGA ZDJĘĆ
 app.post('/upload/:id', upload.single('image'), async (req, res) => {
   const id = req.params.id;
+  
+  // Jeśli użytkownik nie wybrał pliku, przerywamy
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "Brak pliku" });
+  }
+
   const imagePath = req.file.filename;
 
   try {
-    await db.updateVehicleDetails(id, { imagePath });
+    // 1. Pobieramy obecne dane pojazdu
+    const currentVehicle = await db.getVehicleById(id);
+    
+    if (!currentVehicle) {
+      return res.status(404).json({ success: false, message: 'Pojazd nie znaleziony' });
+    }
+
+    // 2. Mapowanie kluczy (znany problem małe/duże litery z bazy)
+    const vehicleWithFixedKeys = {
+        ...currentVehicle,
+        insuranceDate: currentVehicle.insuranceDate || currentVehicle.insurancedate,
+        inspectionDate: currentVehicle.inspectionDate || currentVehicle.inspectiondate,
+        reminderEmail: currentVehicle.reminderEmail || currentVehicle.reminderemail,
+        policyNumber: currentVehicle.policyNumber || currentVehicle.policynumber,
+        plate: currentVehicle.plate
+    };
+
+    // 3. Łączymy stare dane z nowym zdjęciem
+    const vehicleToSave = { 
+      ...vehicleWithFixedKeys, 
+      imagePath: imagePath 
+    };
+
+    // 4. Zapisujemy w bazie
+    await db.updateVehicleDetails(id, vehicleToSave);
+
     res.json({ success: true, imagePath });
   } catch (err) {
     console.error('Błąd aktualizacji zdjęcia:', err);
