@@ -90,14 +90,26 @@ function addVehicle(vehicle) {
 }
 
 function updateVehicle(id, vehicle) {
-  const {
-    brand, model, garage, note, vin, year,
-    policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail,
-    plate
-  } = vehicle;
+  // Pobieramy dane, obsługując oba warianty wielkości liter (camelCase i lowercase)
+  const brand = vehicle.brand;
+  const model = vehicle.model;
+  const garage = vehicle.garage;
+  const note = vehicle.note;
+  const vin = vehicle.vin;
+  const year = vehicle.year;
+  const policyNumber = vehicle.policyNumber || vehicle.policynumber;
+  const date = vehicle.date;
+  
+  // KLUCZOWA POPRAWKA DLA ZDJĘCIA:
+  const imagePath = vehicle.imagePath || vehicle.imagepath; 
+  
+  const admin = vehicle.admin;
+  const insuranceDate = vehicle.insuranceDate || vehicle.insurancedate;
+  const inspectionDate = vehicle.inspectionDate || vehicle.inspectiondate;
+  const reminderEmail = vehicle.reminderEmail || vehicle.reminderemail;
+  const plate = vehicle.plate;
 
-  const yearInt = year === "" ? null : parseInt(year, 10);
+  const yearInt = (year === "" || year === null || year === undefined) ? null : parseInt(year, 10);
 
   return pool.query(`
     UPDATE vehicles SET
@@ -106,10 +118,20 @@ function updateVehicle(id, vehicle) {
       insuranceDate=$11, inspectionDate=$12, reminderEmail=$13, plate=$14
     WHERE id=$15
   `, [
-    brand, model, garage, note, vin, yearInt,
-    policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail,
-    plate,
+    brand || null,
+    model || null,
+    garage || null,
+    note || null,
+    vin || null,
+    yearInt,
+    policyNumber || null,
+    date || null,
+    imagePath || null, // Teraz tutaj trafi poprawna ścieżka!
+    admin || null,
+    insuranceDate || null,
+    inspectionDate || null,
+    reminderEmail || null,
+    plate || null,
     id
   ]);
 }
