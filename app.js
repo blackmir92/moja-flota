@@ -126,6 +126,7 @@ app.post('/edit/vehicle/:id', async (req, res) => {
   const id = req.params.id;
   const allowedFields = ['brand', 'model', 'garage', 'vin', 'year', 'note', 'plate', 'imagePath'];
   const updates = {};
+  
   Object.keys(req.body).forEach(key => {
     if (allowedFields.includes(key)) updates[key] = req.body[key];
   });
@@ -140,13 +141,26 @@ app.post('/edit/vehicle/:id', async (req, res) => {
       inspectionDate: currentVehicle.inspectionDate || currentVehicle.inspectiondate,
       reminderEmail: currentVehicle.reminderEmail || currentVehicle.reminderemail,
       policyNumber: currentVehicle.policyNumber || currentVehicle.policynumber,
-      plate: currentVehicle.plate
+      plate: currentVehicle.plate,
+      // Pamiętamy stare zdjęcie z bazy:
+      imagePath: currentVehicle.imagepath || currentVehicle.imagePath 
     };
 
+    // Łączymy stare dane z nowymi
     const vehicleToSave = { ...vehicleWithFixedKeys, ...updates };
+
+    // --- 🛡️ BEZPIECZNIK ZDJĘCIA ---
+    // Jeśli z frontendu przyszło puste pole zdjęcia (null, "" lub "fred"), 
+    // a w bazie mieliśmy już jakieś zdjęcie, to go nie nadpisujemy!
+    if (!updates.imagePath || updates.imagePath === "" || updates.imagePath.includes("fred.jpg")) {
+        vehicleToSave.imagePath = vehicleWithFixedKeys.imagePath;
+    }
+    // -----------------------------
+
     await db.updateVehicleDetails(id, vehicleToSave);
     res.json({ success: true });
   } catch (err) {
+    console.error("Błąd podczas edycji:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
