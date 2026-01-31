@@ -27,7 +27,8 @@ async function initDB() {
       admin TEXT,
       insuranceDate TEXT,
       inspectionDate TEXT,
-      reminderEmail TEXT
+      reminderEmail TEXT,
+      plate TEXT
     )
   `);
 
@@ -62,13 +63,14 @@ function addVehicle(vehicle) {
   const {
     brand, model, garage, note, vin, year,
     policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail
+    insuranceDate, inspectionDate, reminderEmail, 
+    plate
   } = vehicle;
 
   return pool.query(`
     INSERT INTO vehicles
-    (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+    (brand, model, garage, note, vin, year, policyNumber, date, imagePath, admin, insuranceDate, inspectionDate, reminderEmail, plate)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
   `, [
     brand || null,
     model || null,
@@ -82,7 +84,8 @@ function addVehicle(vehicle) {
     admin || null,
     insuranceDate || null,
     inspectionDate || null,
-    reminderEmail || null
+    reminderEmail || null,
+    plate||null
   ]);
 }
 
@@ -90,7 +93,8 @@ function updateVehicle(id, vehicle) {
   const {
     brand, model, garage, note, vin, year,
     policyNumber, date, imagePath, admin,
-    insuranceDate, inspectionDate, reminderEmail
+    insuranceDate, inspectionDate, reminderEmail,
+    plate
   } = vehicle;
 
   const yearInt = year === "" ? null : parseInt(year, 10);
@@ -99,12 +103,13 @@ function updateVehicle(id, vehicle) {
     UPDATE vehicles SET
       brand=$1, model=$2, garage=$3, note=$4, vin=$5, year=$6,
       policyNumber=$7, date=$8, imagePath=$9, admin=$10,
-      insuranceDate=$11, inspectionDate=$12, reminderEmail=$13
-    WHERE id=$14
+      insuranceDate=$11, inspectionDate=$12, reminderEmail=$13, plate=$14
+    WHERE id=$15
   `, [
     brand, model, garage, note, vin, yearInt,
     policyNumber, date, imagePath, admin,
     insuranceDate, inspectionDate, reminderEmail,
+    plate,
     id
   ]);
 }
