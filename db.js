@@ -124,7 +124,11 @@ function getGarages() {
 
 function getMileageLogs(vehicleId) {
   return pool.query(
-    'SELECT * FROM mileage_logs WHERE vehicle_id=$1 ORDER BY mileage DESC',
+    `SELECT id, vehicle_id, mileage, action, 
+     TO_CHAR(eventdate, 'YYYY-MM-DD') as eventdate 
+     FROM mileage_logs 
+     WHERE vehicle_id=$1 
+     ORDER BY eventdate DESC, id DESC`,
     [vehicleId]
   ).then(res => res.rows);
 }
