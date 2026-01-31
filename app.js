@@ -346,10 +346,12 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
   try {
     const vehicleId = req.params.id;
 
-    // Odczyt danych z formularza lub fetch JSON z frontend
+    // Odczyt danych
     const mileage = Number(req.body.mileage);
     const action = req.body.action || '';
-    const eventDate = req.body.eventDate || new Date().toISOString().split('T')[0]; // domyślnie dzisiaj, jeśli brak
+    
+    // POPRAWKA: Obsługa 'eventDate' (backend) ORAZ 'eventdate' (frontend)
+    const eventDate = req.body.eventDate || req.body.eventdate || new Date().toISOString().split('T')[0];
 
     if (!Number.isFinite(mileage) || mileage <= 0) {
       return res.status(400).json({ success: false, error: 'Nieprawidłowy przebieg' });
@@ -360,11 +362,11 @@ app.post('/vehicle/:id/mileage', async (req, res) => {
 
     // Zwracamy odpowiedź JSON
     res.json({ 
-      success: true,
+      success: true, 
       id: insertedId || null,
       mileage,
       action,
-      eventDate
+      eventdate: eventDate // odsyłamy to co zapisaliśmy
     });
   } catch (err) {
     console.error('Błąd przy zapisie przebiegu:', err);
