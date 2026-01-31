@@ -196,8 +196,7 @@ app.post('/edit/vehicle/:id', async (req, res) => {
   const updates = req.body;
 
   try {
-    // 1. Najpierw pobieramy aktualne dane pojazdu z bazy
-    // Żeby niechcący nie skasować np. zdjęcia (imagePath) ani dat, jeśli ich nie ma w formularzu
+    // 1. Pobieramy stare dane, żeby nie skasować czegoś, czego nie edytowaliśmy (np. zdjęcia)
     const currentVehicle = await db.getVehicleById(id);
 
     if (!currentVehicle) {
@@ -205,23 +204,14 @@ app.post('/edit/vehicle/:id', async (req, res) => {
     }
 
     // 2. Łączymy stare dane z nowymi
-    // "updates" nadpisze tylko te pola, które przyszły z formularza. Reszta zostanie po staremu.
     const vehicleToSave = { ...currentVehicle, ...updates };
 
-    // 3. Zapisujemy kompletny obiekt do bazy
+    // 3. Zapisujemy bezpiecznie całość
     await db.updateVehicleDetails(id, vehicleToSave);
     
     res.json({ success: true });
   } catch (err) {
     console.error('Błąd zapisu danych pojazdu:', err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-  try {
-    await db.updateVehicleDetails(id, filteredUpdates);
-    res.json({ success: true });
-  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
