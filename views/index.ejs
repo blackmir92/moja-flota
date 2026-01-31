@@ -601,7 +601,7 @@ const html = `
 
   <!-- Prawa kolumna: zdjęcie + upload -->
   <div class="vehicle-form-right">
-    <img src="${vehicle.imagePath ? '/uploads/' + vehicle.imagePath : '/fred.jpg'}" alt="Zdjęcie pojazdu">
+    <img id="mainVehicleImage" src="${vehicle.imagepath || vehicle.imagePath ? '/uploads/' + (vehicle.imagepath || vehicle.imagePath) : '/fred.jpg'}" alt="Zdjęcie pojazdu">
  <form id="uploadForm" style="margin-top: 12px; width: 100%; display: flex; flex-direction: column; gap: 8px;">
   <input type="file" name="image" accept="image/*">
   <button type="submit" style="width: 100%; padding: 10px; border: none; border-radius: 12px; background: #2196F3; color: white; font-weight: 600; cursor: pointer;">
@@ -899,13 +899,16 @@ document.addEventListener('click', async (e) => {
 });
 async function saveVehicle(id) {
   const form = document.getElementById('vehicleForm');
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData.entries());
-
-const hiddenImagePath = document.getElementById('imagePathHidden').value;
-  data.imagePath = hiddenImagePath;
-
-  console.log("Wysyłam dane do zapisu:", data); // Sprawdź w konsoli (F12), czy jest tu imagePath
+  // Pobieramy dane bezpośrednio z pól po ID, to najbezpieczniejsza metoda
+  const data = {
+    brand: document.getElementById('brand').value,
+    model: document.getElementById('model').value,
+    garage: document.getElementById('garage').value,
+    year: document.getElementById('year').value,
+    vin: document.getElementById('vin').value,
+    plate: document.getElementById('plate').value, // Tu była pomyłka (event vs plate)
+    imagePath: document.getElementById('imagePathHidden').value // To wysyła ten numer .jpg
+  };
 
   const res = await fetch(`/edit/vehicle/${id}`, {
     method: 'POST',
