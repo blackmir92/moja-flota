@@ -10,6 +10,11 @@ require('./reminderScheduler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
 // === KONFIGURACJA SESJI ===
 app.use(session({
   secret: 'Agamakota',
@@ -260,7 +265,4 @@ function getDaysLeft(dateStr) {
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
 
-// === SERWER ===
-app.listen(PORT + 1, () => { // Druga instancja lub zmień na jedną
-  console.log(`Serwer działa na porcie ${PORT}`);
-});
+
