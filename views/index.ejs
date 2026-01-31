@@ -558,7 +558,7 @@ const html = `
         <input type="text" id="vin" name="vin" value="${vehicle.vin || ''}" />
 
         <label for="event">Numer rejestracyjny:</label>
-        <input type="text" id="event" name="event" value="${vehicle.event || ''}" />
+        <input type="text" id="event" name="plate" value="${vehicle.event || ''}" />
 
         <input type="hidden" id="mileage" name="mileage" value="${vehicle.mileage || ''}" />
           <button type="button" class="ios-green-btn" onclick="saveVehicle('${vehicle.id}')">
