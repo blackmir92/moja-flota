@@ -193,20 +193,32 @@ app.post('/edit/:id', async (req, res) => {
 //aktualizacja zapis danych pojazdu
 app.post('/edit/vehicle/:id', async (req, res) => {
   const id = req.params.id;
-  const updates = req.body;
+  
+  // Lista pól, które ten formularz MA PRAWO edytować.
+  // Daty (insuranceDate, inspectionDate) usuwamy z tej listy, żeby ich przypadkiem nie nadpisać pustym stringiem.
+  const allowedFields = ['brand', 'model', 'garage', 'vin', 'year', 'note', 'event', 'imagePath'];
+  
+  const updates = {};
+  
+  // Przepisujemy z req.body tylko dozwolone pola
+  Object.keys(req.body).forEach(key => {
+    if (allowedFields.includes(key)) {
+      updates[key] = req.body[key];
+    }
+  });
 
   try {
-    // 1. Pobieramy stare dane, żeby nie skasować czegoś, czego nie edytowaliśmy (np. zdjęcia)
+    // 1. Pobieramy stare dane
     const currentVehicle = await db.getVehicleById(id);
 
     if (!currentVehicle) {
       return res.status(404).json({ success: false, message: 'Pojazd nie znaleziony' });
     }
 
-    // 2. Łączymy stare dane z nowymi
+    // 2. Łączymy stare dane z nowymi (zmienią się tylko marka, model itp., a daty zostaną ze starego obiektu)
     const vehicleToSave = { ...currentVehicle, ...updates };
 
-    // 3. Zapisujemy bezpiecznie całość
+    // 3. Zapisujemy całość
     await db.updateVehicleDetails(id, vehicleToSave);
     
     res.json({ success: true });
