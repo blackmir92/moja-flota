@@ -5,44 +5,52 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   }
-});
+}); // <--- Poprawione domknięcie obiektu
 
 /* =======================
    INICJALIZACJA TABEL
 ======================= */
 
 async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS vehicles (
-      id SERIAL PRIMARY KEY,
-      brand TEXT,
-      model TEXT,
-      garage TEXT,
-      note TEXT,
-      vin TEXT,
-      year INTEGER,
-      policyNumber TEXT,
-      date TEXT,
-      imagePath TEXT,
-      admin TEXT,
-      insuranceDate TEXT,
-      inspectionDate TEXT,
-      reminderEmail TEXT,
-      plate TEXT
-    )
-  `);
+  try {
+    console.log("🛠️ Inicjalizacja bazy danych...");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS vehicles (
+        id SERIAL PRIMARY KEY,
+        brand TEXT,
+        model TEXT,
+        garage TEXT,
+        note TEXT,
+        vin TEXT,
+        year INTEGER,
+        policyNumber TEXT,
+        date TEXT,
+        imagePath TEXT,
+        admin TEXT,
+        insuranceDate TEXT,
+        inspectionDate TEXT,
+        reminderEmail TEXT,
+        plate TEXT
+      )
+    `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS mileage_logs (
-      id SERIAL PRIMARY KEY,
-      vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
-      mileage INTEGER,
-      action TEXT,
-      eventDate DATE
-    )
-  `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS mileage_logs (
+        id SERIAL PRIMARY KEY,
+        vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE CASCADE,
+        mileage INTEGER,
+        action TEXT,
+        eventDate DATE
+      )
+    `);
+    console.log("✅ Tabele sprawdzone/utworzone.");
+  } catch (err) {
+    console.error("❌ Błąd inicjalizacji bazy danych:", err.message);
+    // Nie rzucamy błędu dalej, aby serwer nie padł przy starcie
+  }
 }
 
+// Uruchomienie inicjalizacji
 initDB();
 
 /* =======================
@@ -85,12 +93,11 @@ function addVehicle(vehicle) {
     insuranceDate || null,
     inspectionDate || null,
     reminderEmail || null,
-    plate||null
+    plate || null
   ]);
 }
 
 function updateVehicle(id, vehicle) {
-  // Pobieramy dane, obsługując oba warianty wielkości liter (camelCase i lowercase)
   const brand = vehicle.brand;
   const model = vehicle.model;
   const garage = vehicle.garage;
@@ -99,10 +106,7 @@ function updateVehicle(id, vehicle) {
   const year = vehicle.year;
   const policyNumber = vehicle.policyNumber || vehicle.policynumber;
   const date = vehicle.date;
-  
-  // KLUCZOWA POPRAWKA DLA ZDJĘCIA:
-  const imagePath = vehicle.imagePath || vehicle.imagepath; 
-  
+  const imagePath = vehicle.imagePath || vehicle.imagepath;  
   const admin = vehicle.admin;
   const insuranceDate = vehicle.insuranceDate || vehicle.insurancedate;
   const inspectionDate = vehicle.inspectionDate || vehicle.inspectiondate;
@@ -126,7 +130,7 @@ function updateVehicle(id, vehicle) {
     yearInt,
     policyNumber || null,
     date || null,
-    imagePath || null, // Teraz tutaj trafi poprawna ścieżka!
+    imagePath || null,
     admin || null,
     insuranceDate || null,
     inspectionDate || null,
@@ -165,7 +169,7 @@ function addMileageLog(vehicleId, mileage, event, eventDate) {
 
   return pool.query(
     'INSERT INTO mileage_logs (vehicle_id, mileage, action, eventDate) VALUES ($1, $2, $3, $4) RETURNING id',
-    [vehicleId, mileageInt, event, eventDate]  // eventDate musi być 'YYYY-MM-DD'
+    [vehicleId, mileageInt, event, eventDate]
   ).then(res => res.rows[0].id);
 }
 
@@ -188,40 +192,12 @@ function updateVehicleReminders(id, data) {
   ]);
 }
 
-// app.js
-const express = require('express');
-const app = express();
-const db = require('./db'); // Twój moduł db.js z PostgreSQL
-
-// --- Czyści tylko tabelę mileage_logs ---
-app.get('/clean', async (req, res) => {
-  try {
-    await db.pool.query('DELETE FROM mileage_logs'); // PostgreSQL
-    res.send('Tabela czynności została wyczyszczona ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu tabeli czynności ❌');
-  }
-});
-
-// --- Czyści całą bazę pojazdów i czynności ---
-app.get('/cleanall', async (req, res) => {
-  try {
-    await db.pool.query('DELETE FROM mileage_logs');
-    await db.pool.query('DELETE FROM vehicles');
-    res.send('Cała baza danych została wyczyszczona ✅');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Błąd przy czyszczeniu całej bazy ❌');
-  }
-});
-
 /* =======================
-   ALIASY DLA KOMPATYBILNOŚCI
+   ALIASY I EKSPORT
 ======================= */
 
 module.exports = {
-  pool,  // <- teraz możesz użyć pool.query() w app.js
+  pool,
   getVehicles,
   getAllVehicles: getVehicles,
   getVehicleById,
