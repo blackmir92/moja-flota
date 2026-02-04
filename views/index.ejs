@@ -965,6 +965,39 @@ function saveReminders(vehicleId) {
     });
 }
 
+// TA FUNKCJA MUSI BYĆ NA SAMYM DOLE, POZA INNYMI FUNKCJAMI
+async function deleteLog(logId) {
+    if (!confirm('Czy na pewno chcesz usunąć ten wpis z rejestru?')) return;
+    
+    console.log("Wysyłam prośbę o usunięcie ID:", logId);
+
+    try {
+        const res = await fetch(`/log/${logId}`, { 
+            method: 'DELETE' 
+        });
+        
+        if (!res.ok) throw new Error('Błąd odpowiedzi serwera');
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            // Animacja znikania wiersza
+            const row = document.getElementById(`log-row-${logId}`);
+            if (row) {
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            } else {
+                // Jeśli nie ma ID wiersza, po prostu odświeżamy sekcję
+                loadVehicleDetails(currentVehicleId); 
+            }
+        } else {
+            alert('Błąd: ' + data.error);
+        }
+    } catch (err) {
+        console.error('Błąd:', err);
+        alert('Nie udało się połączyć z serwerem. Sprawdź czy trasa /log/:id istnieje w app.js');
+    }
+}
   </script>
   
 </body>
