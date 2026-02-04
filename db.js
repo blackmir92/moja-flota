@@ -197,14 +197,6 @@ async function deleteMileageLog(logId) {
     await pool.query(query, [logId]);
 }
 
-async function updateMileageLog(logId, data) {
-    const query = `
-        UPDATE mileage_logs 
-        SET mileage = $1, action = $2, eventdate = $3 
-        WHERE id = $4
-    `;
-    await pool.query(query, [data.mileage, data.action, data.eventDate, logId]);
-}
 /* =======================
    ALIASY I EKSPORT
 ======================= */
@@ -222,6 +214,5 @@ module.exports = {
   getMileageLogs,
   addMileageLog,
   updateVehicleReminders,
-  deleteMileageLog,
   updateMileageLog,
 };
