@@ -343,80 +343,92 @@ app.get('/export/pdf', async (req, res) => {
     const vehicles = await db.getAllVehicles();
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
 
+    // 1. Dynamiczna nazwa pliku z datą (np. Raport_04-02-2026.pdf)
+    const today = new Date().toISOString().split('T')[0];
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="Raport_Floty.pdf"');
+    res.setHeader('Content-Disposition', `attachment; filename="Raport_Floty_${today}.pdf"`);
+    
     doc.pipe(res);
 
-// --- ŁADOWANIE CZCIONKI Z POLSKIMI ZNAKAMI ---
-const fontName = 'Roboto-VariableFont_wdth,wght.ttf';
-const fontPath = path.join(__dirname, fontName);
-
-if (fs.existsSync(fontPath)) {
-    doc.font(fontPath);
-    console.log("✅ Czcionka Roboto załadowana pomyślnie.");
-} else {
-    console.warn(`⚠️ Nie znaleziono pliku ${fontName}. Polskie znaki mogą nie działać.`);
-}
-// --------------------------------------------
+    // Ładowanie czcionki (upewnij się, że nazwa pliku jest identyczna!)
+    const fontName = 'Roboto-VariableFont_wdth,wght.ttf';
+    const fontPath = path.join(__dirname, fontName);
+    if (fs.existsSync(fontPath)) {
+        doc.font(fontPath);
+    }
 
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i];
       const logs = await db.getMileageLogs(v.id);
 
-      // Każdy pojazd na nowej stronie
       if (i > 0) doc.addPage();
 
-      // NAGŁÓWEK
-      doc.fontSize(22).fillColor('#2c3e50').text(`${v.brand} ${v.model}`, { underline: true });
+      // --- NAGŁÓWEK ---
+      doc.fontSize(22).fillColor('#2c3e50').text(`${v.brand} ${v.model}`, 40, 40);
       doc.fontSize(10).fillColor('#7f8c8d').text(`Data raportu: ${new Date().toLocaleDateString('pl-PL')}`, { align: 'right' });
       doc.moveDown(1);
 
-      // DANE TECHNICZNE (W ramce)
-      doc.fillColor('#000').fontSize(12);
-      doc.text(`Numer rejestracyjny: ${v.plate || '-'}`);
-      doc.text(`VIN: ${v.vin || '-'}`);
-      doc.text(`Rok produkcji: ${v.year || '-'}`);
-      doc.text(`Garaż: ${v.garage || '-'}`);
-      doc.moveDown(0.5);
-      
-      doc.text(`Ubezpieczenie OC do: ${v.insurancedate || v.insuranceDate || '-'}`);
-      doc.text(`Przegląd techniczny do: ${v.inspectiondate || v.inspectionDate || '-'}`);
-      doc.text(`Numer polisy: ${v.policynumber || v.policyNumber || '-'}`);
-      doc.moveDown(1.5);
+      // --- 2. MINIATURKA ZDJĘCIA ---
+      const imagePathRaw = v.imagepath || v.imagePath;
+      const fullImagePath = imagePathRaw ? path.join(__dirname, 'uploads', imagePathRaw) : null;
 
-      // TABELA REJESTRU
-      doc.fontSize(14).fillColor('#2c3e50').text('Historia pojazdu (Rejestr przebiegu)', { bould: true });
-      doc.moveTo(40, doc.y).lineTo(550, doc.y).strokeColor('#bdc3c7').stroke();
+      if (fullImagePath && fs.existsSync(fullImagePath)) {
+        try {
+          // Wstawiamy zdjęcie po prawej stronie (x: 400, y: 80, szerokość: 150)
+          doc.image(fullImagePath, 400, 80, { width: 150 });
+        } catch (imgErr) {
+          console.error("Błąd ładowania obrazka do PDF:", imgErr);
+        }
+      } else {
+        // Ramka zastępcza, jeśli zdjęcia brak
+        doc.rect(400, 80, 150, 100).strokeColor('#eee').stroke();
+        doc.fontSize(8).fillColor('#ccc').text('Brak zdjęcia', 450, 125);
+      }
+
+      // --- DANE TECHNICZNE (przesunięte w lewo, żeby nie najechały na zdjęcie) ---
+      doc.fillColor('#000').fontSize(12);
+      const dataX = 40;
+      let currentY = 80;
+
+      doc.text(`Numer rejestracyjny: ${v.plate || '-'}`, dataX, currentY);
+      doc.text(`VIN: ${v.vin || '-'}`, dataX, currentY + 20);
+      doc.text(`Rok produkcji: ${v.year || '-'}`, dataX, currentY + 40);
+      doc.text(`Garaż: ${v.garage || '-'}`, dataX, currentY + 60);
+      
+      currentY += 90;
+      doc.text(`Ubezpieczenie OC do: ${v.insurancedate || v.insuranceDate || '-'}`, dataX, currentY);
+      doc.text(`Przegląd techniczny do: ${v.inspectiondate || v.inspectionDate || '-'}`, dataX, currentY + 20);
+      doc.text(`Numer polisy: ${v.policynumber || v.policyNumber || '-'}`, dataX, currentY + 40);
+      
+      doc.moveDown(3);
+
+      // --- TABELA REJESTRU ---
+      doc.fontSize(14).fillColor('#2c3e50').text('Historia pojazdu', { underline: true });
       doc.moveDown(0.5);
 
       if (logs && logs.length > 0) {
-        // Nagłówki tabeli
-        const tableTop = doc.y;
         doc.fontSize(10).fillColor('#7f8c8d');
+        const tableTop = doc.y;
         doc.text('Data', 50, tableTop);
         doc.text('Przebieg', 150, tableTop);
-        doc.text('Czynność / Opis', 250, tableTop);
+        doc.text('Czynność', 250, tableTop);
+        doc.moveDown(0.5);
+        doc.moveTo(40, doc.y).lineTo(550, doc.y).strokeColor('#bdc3c7').stroke();
         doc.moveDown(0.5);
 
         doc.fillColor('#000');
         logs.forEach(l => {
-          const currentY = doc.y;
-          // Automatyczne zawijanie tekstu dla długich opisów czynności
-          doc.text(l.eventdate || l.eventDate || '-', 50, currentY);
-          doc.text(`${l.mileage || 0} km`, 150, currentY);
-          doc.text(l.action || '-', 250, currentY, { width: 300 });
-          doc.moveDown(0.5);
-          
-          // Jeśli zbliżamy się do końca strony wewnątrz tabeli
           if (doc.y > 750) doc.addPage();
+          const logY = doc.y;
+          doc.text(l.eventdate || l.eventDate || '-', 50, logY);
+          doc.text(`${l.mileage || 0} km`, 150, logY);
+          doc.text(l.action || '-', 250, logY, { width: 300 });
+          doc.moveDown(0.5);
         });
-      } else {
-        doc.fontSize(10).fillColor('#95a5a6').text('Brak wpisów w historii serwisowej.');
       }
 
-      // Stopka strony
-      const bottom = doc.page.height - 50;
-      doc.fontSize(8).fillColor('#bdc3c7').text(`Strona ${i + 1} z ${vehicles.length} | System Moja Flota`, 40, bottom, { align: 'center' });
+      // Stopka
+      doc.fontSize(8).fillColor('#bdc3c7').text(`Strona ${i + 1} z ${vehicles.length}`, 0, doc.page.height - 40, { align: 'center' });
     }
 
     doc.end();
