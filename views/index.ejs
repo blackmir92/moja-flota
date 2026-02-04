@@ -632,13 +632,13 @@ const html = `
 
   <h3>Historia przebiegów i czynności</h3>
   <table id="mileageTable">
-    <thead>
-      <tr>
-        <th>Data czynności</th>
-        <th>Przebieg</th>
-        <th>Czynność</th>
-      </tr>
-    </thead>
+<thead>
+  <tr>
+    <th>Data czynności</th>
+    <th>Przebieg</th>
+    <th>Czynność</th>
+    <th>Akcje</th> </tr>
+</thead>
     <tbody></tbody>
   </table>
 
@@ -681,16 +681,18 @@ fetch(`/vehicle/${currentVehicleId}/mileage`)
       return;
     }
 
-    // Wstaw wpisy
-    data.forEach(row => {
-      tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-          <td>${row.eventdate}</td>
-          <td>${row.mileage} km</td>
-          <td>${row.action}</td>
-        </tr>
-      `);
-    });
+data.forEach(row => {
+  tbody.insertAdjacentHTML('beforeend', `
+    <tr id="log-row-${row.id}">
+      <td>${row.eventdate}</td>
+      <td>${row.mileage} km</td>
+      <td>${row.action}</td>
+      <td>
+        <button onclick="deleteLog('${row.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2em;">🗑️</button>
+      </td>
+    </tr>
+  `);
+});
   })
   .catch(err => {
     console.error('Błąd ładowania historii:', err);
@@ -728,13 +730,16 @@ const firstTd = tbody.querySelector('td');
 if (firstTd && firstTd.textContent === 'Brak wpisów') {
   tbody.innerHTML = '';
 }
-        tbody.insertAdjacentHTML('afterbegin', `
-            <tr>
-                <td>${data.eventdate}</td>
-                <td>${data.mileage} km</td>
-                <td>${data.action}</td>
-            </tr>
-        `);
+tbody.insertAdjacentHTML('afterbegin', `
+  <tr id="log-row-${data.id}">
+      <td>${data.eventdate}</td>
+      <td>${data.mileage} km</td>
+      <td>${data.action}</td>
+      <td>
+        <button onclick="deleteLog('${data.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2em;">🗑️</button>
+      </td>
+  </tr>
+`);
 
       // Wyczyść pola
       document.getElementById('newMileage').value = '';
