@@ -262,6 +262,27 @@ app.post('/delete/:id', async (req, res) => {
   res.redirect('/');
 });
 
+// Usuwanie wpisu
+app.delete('/log/:id', async (req, res) => {
+    try {
+        await db.deleteMileageLog(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Edycja wpisu
+app.post('/log/edit/:id', async (req, res) => {
+    try {
+        const { mileage, action, eventDate } = req.body;
+        await db.updateMileageLog(req.params.id, { mileage, action, eventDate });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // === EKSPORTY ===
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
@@ -340,6 +361,8 @@ app.get('/export/excel', async (req, res) => {
     res.status(500).send('Błąd podczas generowania pliku Excel');
   }
 });
+
+
 
 app.get('/export/pdf', async (req, res) => {
   try {
