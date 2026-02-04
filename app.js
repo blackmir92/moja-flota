@@ -426,9 +426,7 @@ app.get('/export/pdf', async (req, res) => {
         });
       }
 
-      // STOPKA - generowana na samym końcu tworzenia strony dla danego auta
-      const pageCount = doc.bufferedPageRange().count;
-      doc.fontSize(8).fillColor('#bdc3c7').text(`Pojazd ${i + 1} z ${vehicles.length}`, 0, doc.page.height - 40, { align: 'center' });
+
     }
 
     doc.end();
