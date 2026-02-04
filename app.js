@@ -267,31 +267,76 @@ app.get('/export/excel', async (req, res) => {
   try {
     const vehicles = await db.getAllVehicles();
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Pojazdy');
+    const sheet = workbook.addWorksheet('Pełny Raport Floty');
+
+    // 1. Definiujemy WSZYSTKIE kolumny (Pojazd + Rejestr)
     sheet.columns = [
       { header: 'Marka', key: 'brand', width: 15 },
       { header: 'Model', key: 'model', width: 15 },
+      { header: 'Nr Rejestracyjny', key: 'plate', width: 15 },
       { header: 'Garaż', key: 'garage', width: 15 },
-      { header: 'Przebieg', key: 'mileage', width: 12 },
-      { header: 'Czynność', key: 'action', width: 25 },
-      { header: 'Data', key: 'eventDate', width: 15 }
+      { header: 'VIN', key: 'vin', width: 20 },
+      { header: 'Rok', key: 'year', width: 10 },
+      { header: 'Nr Polisy', key: 'policyNumber', width: 20 },
+      { header: 'Ubezpieczenie do', key: 'insuranceDate', width: 15 },
+      { header: 'Przegląd do', key: 'inspectionDate', width: 15 },
+      { header: 'Email przypomnień', key: 'reminderEmail', width: 25 },
+      { header: 'Notatki', key: 'note', width: 30 },
+      // Kolumny z rejestru przebiegu
+      { header: 'Data Zdarzenia', key: 'logDate', width: 15 },
+      { header: 'Przebieg (km)', key: 'logMileage', width: 15 },
+      { header: 'Czynność / Opis', key: 'logAction', width: 30 }
     ];
+
+    // Stylizacja nagłówka (opcjonalnie, żeby było ładniej)
+    sheet.getRow(1).font = { bold: true };
 
     for (const v of vehicles) {
       const logs = await db.getMileageLogs(v.id);
-      if (logs.length > 0) {
-        logs.forEach(l => sheet.addRow({ brand: v.brand, model: v.model, garage: v.garage, mileage: l.mileage, action: l.action, eventDate: l.eventDate }));
+
+      // Mapujemy dane pojazdu, dbając o wielkość liter z PostgreSQL
+      const vehicleBase = {
+        brand: v.brand,
+        model: v.model,
+        plate: v.plate,
+        garage: v.garage,
+        vin: v.vin,
+        year: v.year,
+        policyNumber: v.policyNumber || v.policynumber,
+        insuranceDate: v.insuranceDate || v.insurancedate,
+        inspectionDate: v.inspectionDate || v.inspectiondate,
+        reminderEmail: v.reminderEmail || v.reminderemail,
+        note: v.note
+      };
+
+      if (logs && logs.length > 0) {
+        logs.forEach(l => {
+          sheet.addRow({
+            ...vehicleBase,
+            logDate: l.eventDate || l.eventdate,
+            logMileage: l.mileage,
+            logAction: l.action
+          });
+        });
       } else {
-        sheet.addRow({ brand: v.brand, model: v.model, garage: v.garage, action: 'Brak zdarzeń' });
+        // Jeśli brak logów, dodajemy sam pojazd z pustymi danymi rejestru
+        sheet.addRow({
+          ...vehicleBase,
+          logAction: 'Brak wpisów w rejestrze'
+        });
       }
     }
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="raport.xlsx"');
+    res.setHeader('Content-Disposition', 'attachment; filename="Raport_Floty_' + new Date().toISOString().split('T')[0] + '.xlsx"');
+    
     await workbook.xlsx.write(res);
     res.end();
-  } catch (err) { res.status(500).send('Błąd Excel'); }
+  } catch (err) {
+    console.error("Błąd eksportu Excel:", err);
+    res.status(500).send('Błąd podczas generowania pliku Excel');
+  }
 });
-
 // Pomocnicza funkcja
 function getDaysLeft(dateStr) {
   if (!dateStr) return null;
