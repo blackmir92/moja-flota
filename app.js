@@ -15,7 +15,7 @@ app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// === KONFIGURACJA SESJI ===
+// === KONFIGURACJA SESJI ==
 app.use(session({
   secret: 'Agamakota',
   resave: false,
