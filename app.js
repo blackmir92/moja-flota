@@ -341,16 +341,15 @@ app.get('/export/excel', async (req, res) => {
 app.get('/export/pdf', async (req, res) => {
   try {
     const vehicles = await db.getAllVehicles();
-    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    // Tworzymy dokument, ale NIE dodajemy strony automatycznie przy starcie
+    const doc = new PDFDocument({ margin: 40, size: 'A4', autoFirstPage: false });
 
-    // 1. Dynamiczna nazwa pliku z datą (np. Raport_04-02-2026.pdf)
     const today = new Date().toISOString().split('T')[0];
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Raport_Floty_${today}.pdf"`);
     
     doc.pipe(res);
 
-    // Ładowanie czcionki (upewnij się, że nazwa pliku jest identyczna!)
     const fontName = 'Roboto-VariableFont_wdth,wght.ttf';
     const fontPath = path.join(__dirname, fontName);
     if (fs.existsSync(fontPath)) {
@@ -361,44 +360,38 @@ app.get('/export/pdf', async (req, res) => {
       const v = vehicles[i];
       const logs = await db.getMileageLogs(v.id);
 
-      if (i > 0) doc.addPage();
+      // DODAJEMY STRONĘ TYLKO TUTAJ
+      doc.addPage();
 
       // --- NAGŁÓWEK ---
       doc.fontSize(22).fillColor('#2c3e50').text(`${v.brand} ${v.model}`, 40, 40);
       doc.fontSize(10).fillColor('#7f8c8d').text(`Data raportu: ${new Date().toLocaleDateString('pl-PL')}`, { align: 'right' });
       doc.moveDown(1);
 
-      // --- 2. MINIATURKA ZDJĘCIA ---
+      // --- MINIATURKA ZDJĘCIA ---
       const imagePathRaw = v.imagepath || v.imagePath;
       const fullImagePath = imagePathRaw ? path.join(__dirname, 'uploads', imagePathRaw) : null;
 
       if (fullImagePath && fs.existsSync(fullImagePath)) {
         try {
-          // Wstawiamy zdjęcie po prawej stronie (x: 400, y: 80, szerokość: 150)
           doc.image(fullImagePath, 400, 80, { width: 150 });
         } catch (imgErr) {
-          console.error("Błąd ładowania obrazka do PDF:", imgErr);
+          console.error("Błąd obrazka:", imgErr);
         }
-      } else {
-        // Ramka zastępcza, jeśli zdjęcia brak
-        doc.rect(400, 80, 150, 100).strokeColor('#eee').stroke();
-        doc.fontSize(8).fillColor('#ccc').text('Brak zdjęcia', 450, 125);
       }
 
-      // --- DANE TECHNICZNE (przesunięte w lewo, żeby nie najechały na zdjęcie) ---
+      // --- DANE TECHNICZNE ---
       doc.fillColor('#000').fontSize(12);
-      const dataX = 40;
       let currentY = 80;
-
-      doc.text(`Numer rejestracyjny: ${v.plate || '-'}`, dataX, currentY);
-      doc.text(`VIN: ${v.vin || '-'}`, dataX, currentY + 20);
-      doc.text(`Rok produkcji: ${v.year || '-'}`, dataX, currentY + 40);
-      doc.text(`Garaż: ${v.garage || '-'}`, dataX, currentY + 60);
+      doc.text(`Numer rejestracyjny: ${v.plate || '-'}`, 40, currentY);
+      doc.text(`VIN: ${v.vin || '-'}`, 40, currentY + 20);
+      doc.text(`Rok produkcji: ${v.year || '-'}`, 40, currentY + 40);
+      doc.text(`Garaż: ${v.garage || '-'}`, 40, currentY + 60);
       
       currentY += 90;
-      doc.text(`Ubezpieczenie OC do: ${v.insurancedate || v.insuranceDate || '-'}`, dataX, currentY);
-      doc.text(`Przegląd techniczny do: ${v.inspectiondate || v.inspectionDate || '-'}`, dataX, currentY + 20);
-      doc.text(`Numer polisy: ${v.policynumber || v.policyNumber || '-'}`, dataX, currentY + 40);
+      doc.text(`Ubezpieczenie OC do: ${v.insurancedate || v.insuranceDate || '-'}`, 40, currentY);
+      doc.text(`Przegląd techniczny do: ${v.inspectiondate || v.inspectionDate || '-'}`, 40, currentY + 20);
+      doc.text(`Numer polisy: ${v.policynumber || v.policyNumber || '-'}`, 40, currentY + 40);
       
       doc.moveDown(3);
 
@@ -418,7 +411,13 @@ app.get('/export/pdf', async (req, res) => {
 
         doc.fillColor('#000');
         logs.forEach(l => {
-          if (doc.y > 750) doc.addPage();
+          // SPRAWDZENIE MIEJSCA: Jeśli zostało mniej niż 60 pkt do końca, dodaj stronę
+          if (doc.y > 720) {
+             doc.addPage();
+             // Powtórz nagłówki na nowej stronie (opcjonalnie)
+             doc.fontSize(10).fillColor('#7f8c8d').text('Historia cd...', 50, 40);
+             doc.moveDown(1);
+          }
           const logY = doc.y;
           doc.text(l.eventdate || l.eventDate || '-', 50, logY);
           doc.text(`${l.mileage || 0} km`, 150, logY);
@@ -427,8 +426,9 @@ app.get('/export/pdf', async (req, res) => {
         });
       }
 
-      // Stopka
-      doc.fontSize(8).fillColor('#bdc3c7').text(`Strona ${i + 1} z ${vehicles.length}`, 0, doc.page.height - 40, { align: 'center' });
+      // STOPKA - generowana na samym końcu tworzenia strony dla danego auta
+      const pageCount = doc.bufferedPageRange().count;
+      doc.fontSize(8).fillColor('#bdc3c7').text(`Pojazd ${i + 1} z ${vehicles.length}`, 0, doc.page.height - 40, { align: 'center' });
     }
 
     doc.end();
