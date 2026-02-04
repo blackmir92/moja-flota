@@ -1,26 +1,22 @@
-const { getAllVehicles } = require('./db'); // Użyjemy głównej funkcji pobierania
+const { getAllVehicles } = require('./db');
 const { sendReminderEmail } = require('./mailer');
 const cron = require('node-cron');
 
-// Harmonogram: 15:59 (jeśli tak sugeruje Twój komentarz, to powinno być '59 15 * * *')
-// Obecnie masz '16 00 * * *' co oznacza 00:16 w nocy.
-cron.schedule('18 09 * * *', async () => { 
-  console.log('⏰ Uruchamiam sprawdzanie przypomnień mailowych...');
+cron.schedule('25 09 * * *', async () => { 
+  console.log('⏰ Uruchamiam codzienne skanowanie terminów...');
   try {
     const vehicles = await getAllVehicles();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const reminderDaysBefore = 10;
 
     vehicles.forEach(v => {
-      // Pobieramy dane obsługując małe i duże litery
       const email = v.reminderemail || v.reminderEmail;
-      const dates = {
-        'Ubezpieczenie': v.insurancedate || v.insuranceDate,
-        'Przegląd': v.inspectiondate || v.inspectionDate
-      };
+      if (!email) return;
 
-      if (!email) return; // Jeśli brak maila, pomiń pojazd
+      const dates = {
+        'Ubezpieczenie OC': v.insurancedate || v.insuranceDate,
+        'Przegląd Techniczny': v.inspectiondate || v.inspectionDate
+      };
 
       Object.entries(dates).forEach(([label, dateValue]) => {
         if (dateValue) {
@@ -30,20 +26,32 @@ cron.schedule('18 09 * * *', async () => {
           const diffTime = dateLimit - today;
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-          console.log(`🔍 Sprawdzam ${v.brand}: ${label} za ${diffDays} dni`);
+          // NOWA LOGIKA: Wysyłaj, jeśli zostało 10 dni LUB termin już minął (diffDays < 0)
+          if (diffDays <= 10) {
+            let statusPrefix = '🔔 Nadchodzący termin';
+            let messagePart = `kończy się za ${diffDays} dni`;
 
-          if (diffDays === reminderDaysBefore) {
+            if (diffDays < 0) {
+              statusPrefix = '⚠️ TERMIN UPŁYNĄŁ';
+              messagePart = `minął ${Math.abs(diffDays)} dni temu!`;
+            } else if (diffDays === 0) {
+              statusPrefix = '🔥 TERMIN DZISIAJ';
+              messagePart = `kończy się DZISIAJ`;
+            }
+
             sendReminderEmail(
               email,
-              `🔔 Przypomnienie: ${v.brand} ${v.model} - ${label}`,
-              `Cześć! Przypominamy, że za ${diffDays} dni (${dateValue}) kończy się ${label} w Twoim pojeździe ${v.brand} ${v.model}.`
+              `${statusPrefix}: ${v.brand} ${v.model} - ${label}`,
+              `Pojazd: ${v.brand} ${v.model}\nCzynność: ${label}\nStatus: ${messagePart} (${dateValue}).\n\nProsimy o niezwłoczną aktualizację danych w systemie po załatwieniu sprawy.`
             );
+            
+            console.log(`✉️ Wysłano przypomnienie dla ${v.brand} (${label}: ${diffDays} dni)`);
           }
         }
       });
     });
   } catch (err) {
-    console.error('❌ Błąd przy sprawdzaniu przypomnień:', err);
+    console.error('❌ Błąd podczas skanowania terminów:', err);
   }
 }, {
   timezone: 'Europe/Warsaw'
