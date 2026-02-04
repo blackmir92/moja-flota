@@ -341,71 +341,82 @@ app.get('/export/excel', async (req, res) => {
 app.get('/export/pdf', async (req, res) => {
   try {
     const vehicles = await db.getAllVehicles();
-    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
 
-    res.setHeader('Content-Type', 'application/json'); // Tymczasowo, PDFDocument zajmie się resztą
+    res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="Raport_Floty.pdf"');
     doc.pipe(res);
 
-    // Nagłówek raportu
-    doc.fontSize(20).text('RAPORT ZBIORCZY FLOTY', { align: 'center' });
-    doc.fontSize(10).text(`Wygenerowano: ${new Date().toLocaleString('pl-PL')}`, { align: 'center' });
-    doc.moveDown(2);
+// --- ŁADOWANIE CZCIONKI Z POLSKIMI ZNAKAMI ---
+const fontName = 'Roboto-VariableFont_wdth,wght.ttf';
+const fontPath = path.join(__dirname, fontName);
 
-    for (const v of vehicles) {
-      // Sprawdzamy czy nie trzeba zacząć nowej strony dla każdego auta (opcjonalnie)
-      // doc.addPage(); 
+if (fs.existsSync(fontPath)) {
+    doc.font(fontPath);
+    console.log("✅ Czcionka Roboto załadowana pomyślnie.");
+} else {
+    console.warn(`⚠️ Nie znaleziono pliku ${fontName}. Polskie znaki mogą nie działać.`);
+}
+// --------------------------------------------
 
-      // Sekcja Pojazdu
-      doc.rect(30, doc.y, 535, 20).fill('#f0f0f0');
-      doc.fillColor('#000').fontSize(12).text(`${v.brand} ${v.model} (${v.plate || 'Brak tablic'})`, 35, doc.y - 15, { bold: true });
-      doc.moveDown(0.5);
+    for (let i = 0; i < vehicles.length; i++) {
+      const v = vehicles[i];
+      const logs = await db.getMileageLogs(v.id);
 
-      const yPoint = doc.y;
-      doc.fontSize(10)
-         .text(`VIN: ${v.vin || '-'}`, 40, yPoint)
-         .text(`Garaż: ${v.garage || '-'}`, 200, yPoint)
-         .text(`Rok: ${v.year || '-'}`, 400, yPoint);
-      
-      doc.moveDown(0.5);
-      const yPoint2 = doc.y;
-      doc.text(`Ubezpieczenie: ${v.insurancedate || v.insuranceDate || '-'}`, 40, yPoint2)
-         .text(`Przegląd: ${v.inspectiondate || v.inspectionDate || '-'}`, 200, yPoint2)
-         .text(`Polisa: ${v.policynumber || v.policyNumber || '-'}`, 400, yPoint2);
+      // Każdy pojazd na nowej stronie
+      if (i > 0) doc.addPage();
 
+      // NAGŁÓWEK
+      doc.fontSize(22).fillColor('#2c3e50').text(`${v.brand} ${v.model}`, { underline: true });
+      doc.fontSize(10).fillColor('#7f8c8d').text(`Data raportu: ${new Date().toLocaleDateString('pl-PL')}`, { align: 'right' });
       doc.moveDown(1);
 
-      // Tabela rejestru (jeśli są logi)
-      const logs = await db.getMileageLogs(v.id);
-      if (logs && logs.length > 0) {
-        doc.fontSize(9).text('REJESTR PRZEBIEGU I CZYNNOŚCI:', { underline: true });
-        doc.moveDown(0.2);
+      // DANE TECHNICZNE (W ramce)
+      doc.fillColor('#000').fontSize(12);
+      doc.text(`Numer rejestracyjny: ${v.plate || '-'}`);
+      doc.text(`VIN: ${v.vin || '-'}`);
+      doc.text(`Rok produkcji: ${v.year || '-'}`);
+      doc.text(`Garaż: ${v.garage || '-'}`);
+      doc.moveDown(0.5);
+      
+      doc.text(`Ubezpieczenie OC do: ${v.insurancedate || v.insuranceDate || '-'}`);
+      doc.text(`Przegląd techniczny do: ${v.inspectiondate || v.inspectionDate || '-'}`);
+      doc.text(`Numer polisy: ${v.policynumber || v.policyNumber || '-'}`);
+      doc.moveDown(1.5);
 
+      // TABELA REJESTRU
+      doc.fontSize(14).fillColor('#2c3e50').text('Historia pojazdu (Rejestr przebiegu)', { bould: true });
+      doc.moveTo(40, doc.y).lineTo(550, doc.y).strokeColor('#bdc3c7').stroke();
+      doc.moveDown(0.5);
+
+      if (logs && logs.length > 0) {
         // Nagłówki tabeli
-        const tableY = doc.y;
-        doc.text('Data', 50, tableY)
-           .text('Przebieg', 130, tableY)
-           .text('Czynność', 220, tableY);
-        
-        doc.moveTo(50, doc.y + 2).lineTo(550, doc.y + 2).stroke();
+        const tableTop = doc.y;
+        doc.fontSize(10).fillColor('#7f8c8d');
+        doc.text('Data', 50, tableTop);
+        doc.text('Przebieg', 150, tableTop);
+        doc.text('Czynność / Opis', 250, tableTop);
         doc.moveDown(0.5);
 
+        doc.fillColor('#000');
         logs.forEach(l => {
-          if (doc.y > 700) doc.addPage(); // Proste zabezpieczenie przed końcem strony
           const currentY = doc.y;
-          doc.text(l.eventdate || l.eventDate || '-', 50, currentY)
-             .text(`${l.mileage} km`, 130, currentY)
-             .text(l.action || '-', 220, currentY, { width: 330 });
-          doc.moveDown(0.8);
+          // Automatyczne zawijanie tekstu dla długich opisów czynności
+          doc.text(l.eventdate || l.eventDate || '-', 50, currentY);
+          doc.text(`${l.mileage || 0} km`, 150, currentY);
+          doc.text(l.action || '-', 250, currentY, { width: 300 });
+          doc.moveDown(0.5);
+          
+          // Jeśli zbliżamy się do końca strony wewnątrz tabeli
+          if (doc.y > 750) doc.addPage();
         });
       } else {
-        doc.fontSize(9).fillColor('#888').text('Brak wpisów w rejestrze dla tego pojazdu.');
-        doc.fillColor('#000');
+        doc.fontSize(10).fillColor('#95a5a6').text('Brak wpisów w historii serwisowej.');
       }
 
-      doc.moveDown(2);
-      doc.moveTo(30, doc.y).lineTo(565, doc.y).dash(5, { space: 10 }).stroke().undash();
-      doc.moveDown(1);
+      // Stopka strony
+      const bottom = doc.page.height - 50;
+      doc.fontSize(8).fillColor('#bdc3c7').text(`Strona ${i + 1} z ${vehicles.length} | System Moja Flota`, 40, bottom, { align: 'center' });
     }
 
     doc.end();
