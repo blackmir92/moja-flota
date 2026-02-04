@@ -2,7 +2,7 @@ const { getAllVehicles } = require('./db');
 const { sendReminderEmail } = require('./mailer');
 const cron = require('node-cron');
 
-cron.schedule('25 09 * * *', async () => { 
+cron.schedule('00 10 * * *', async () => { 
   console.log('⏰ Uruchamiam codzienne skanowanie terminów...');
   try {
     const vehicles = await getAllVehicles();
