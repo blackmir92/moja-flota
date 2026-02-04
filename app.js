@@ -10,6 +10,9 @@ require('./reminderScheduler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const mailer = require('./mailer');
+// TEST: Wyśle maila przy każdym restarcie serwera
+mailer.sendReminderEmail('tomczyk.wroc@gmail.com', 'Test Systemu', 'Jeśli to widzisz, mailer.js jest OK!');
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
