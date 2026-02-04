@@ -89,14 +89,35 @@ app.get("/", async (req, res) => {
     const alerts = [];
 
     vehicles.forEach(v => {
-      const insDays = getDaysLeft(v.insuranceDate);
-      const inspDays = getDaysLeft(v.inspectionDate);
-      if (insDays !== null && insDays <= 30) alerts.push(`${v.brand} ${v.model} – koniec ubezpieczenia za ${insDays} dni`);
-      if (inspDays !== null && inspDays <= 30) alerts.push(`${v.brand} ${v.model} – koniec przeglądu za ${inspDays} dni`);
+      // Pobieramy daty, sprawdzając oba warianty nazw kolumn
+      const insDate = v.insuranceDate || v.insurancedate;
+      const inspDate = v.inspectionDate || v.inspectiondate;
+
+      const insDays = getDaysLeft(insDate);
+      const inspDays = getDaysLeft(inspDate);
+
+      // Alert dla ubezpieczenia (do 30 dni)
+      if (insDays !== null) {
+        if (insDays <= 0) {
+          alerts.push(`⚠️ ${v.brand} ${v.model} – ubezpieczenie wygasło!`);
+        } else if (insDays <= 30) {
+          alerts.push(`📅 ${v.brand} ${v.model} – koniec OC za ${insDays} dni`);
+        }
+      }
+
+      // Alert dla przeglądu (do 30 dni)
+      if (inspDays !== null) {
+        if (inspDays <= 0) {
+          alerts.push(`❌ ${v.brand} ${v.model} – brak aktualnego przeglądu!`);
+        } else if (inspDays <= 30) {
+          alerts.push(`🔧 ${v.brand} ${v.model} – koniec przeglądu za ${inspDays} dni`);
+        }
+      }
     });
 
     res.render("index", { vehicles, garages, alerts, selectedVehicle: null });
   } catch (err) {
+    console.error("Błąd ładowania strony głównej:", err);
     res.status(500).send("Błąd serwera");
   }
 });
