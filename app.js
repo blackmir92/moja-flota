@@ -337,6 +337,83 @@ app.get('/export/excel', async (req, res) => {
     res.status(500).send('Błąd podczas generowania pliku Excel');
   }
 });
+
+app.get('/export/pdf', async (req, res) => {
+  try {
+    const vehicles = await db.getAllVehicles();
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+    res.setHeader('Content-Type', 'application/json'); // Tymczasowo, PDFDocument zajmie się resztą
+    res.setHeader('Content-Disposition', 'attachment; filename="Raport_Floty.pdf"');
+    doc.pipe(res);
+
+    // Nagłówek raportu
+    doc.fontSize(20).text('RAPORT ZBIORCZY FLOTY', { align: 'center' });
+    doc.fontSize(10).text(`Wygenerowano: ${new Date().toLocaleString('pl-PL')}`, { align: 'center' });
+    doc.moveDown(2);
+
+    for (const v of vehicles) {
+      // Sprawdzamy czy nie trzeba zacząć nowej strony dla każdego auta (opcjonalnie)
+      // doc.addPage(); 
+
+      // Sekcja Pojazdu
+      doc.rect(30, doc.y, 535, 20).fill('#f0f0f0');
+      doc.fillColor('#000').fontSize(12).text(`${v.brand} ${v.model} (${v.plate || 'Brak tablic'})`, 35, doc.y - 15, { bold: true });
+      doc.moveDown(0.5);
+
+      const yPoint = doc.y;
+      doc.fontSize(10)
+         .text(`VIN: ${v.vin || '-'}`, 40, yPoint)
+         .text(`Garaż: ${v.garage || '-'}`, 200, yPoint)
+         .text(`Rok: ${v.year || '-'}`, 400, yPoint);
+      
+      doc.moveDown(0.5);
+      const yPoint2 = doc.y;
+      doc.text(`Ubezpieczenie: ${v.insurancedate || v.insuranceDate || '-'}`, 40, yPoint2)
+         .text(`Przegląd: ${v.inspectiondate || v.inspectionDate || '-'}`, 200, yPoint2)
+         .text(`Polisa: ${v.policynumber || v.policyNumber || '-'}`, 400, yPoint2);
+
+      doc.moveDown(1);
+
+      // Tabela rejestru (jeśli są logi)
+      const logs = await db.getMileageLogs(v.id);
+      if (logs && logs.length > 0) {
+        doc.fontSize(9).text('REJESTR PRZEBIEGU I CZYNNOŚCI:', { underline: true });
+        doc.moveDown(0.2);
+
+        // Nagłówki tabeli
+        const tableY = doc.y;
+        doc.text('Data', 50, tableY)
+           .text('Przebieg', 130, tableY)
+           .text('Czynność', 220, tableY);
+        
+        doc.moveTo(50, doc.y + 2).lineTo(550, doc.y + 2).stroke();
+        doc.moveDown(0.5);
+
+        logs.forEach(l => {
+          if (doc.y > 700) doc.addPage(); // Proste zabezpieczenie przed końcem strony
+          const currentY = doc.y;
+          doc.text(l.eventdate || l.eventDate || '-', 50, currentY)
+             .text(`${l.mileage} km`, 130, currentY)
+             .text(l.action || '-', 220, currentY, { width: 330 });
+          doc.moveDown(0.8);
+        });
+      } else {
+        doc.fontSize(9).fillColor('#888').text('Brak wpisów w rejestrze dla tego pojazdu.');
+        doc.fillColor('#000');
+      }
+
+      doc.moveDown(2);
+      doc.moveTo(30, doc.y).lineTo(565, doc.y).dash(5, { space: 10 }).stroke().undash();
+      doc.moveDown(1);
+    }
+
+    doc.end();
+  } catch (err) {
+    console.error("Błąd PDF:", err);
+    res.status(500).send('Błąd generowania PDF');
+  }
+});
 // Pomocnicza funkcja
 function getDaysLeft(dateStr) {
   if (!dateStr) return null;
