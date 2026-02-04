@@ -272,16 +272,7 @@ app.delete('/log/:id', async (req, res) => {
     }
 });
 
-// Edycja wpisu
-app.post('/log/edit/:id', async (req, res) => {
-    try {
-        const { mileage, action, eventDate } = req.body;
-        await db.updateMileageLog(req.params.id, { mileage, action, eventDate });
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
+
 
 // === EKSPORTY ===
 const ExcelJS = require('exceljs');
