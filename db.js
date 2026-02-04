@@ -214,5 +214,5 @@ module.exports = {
   getMileageLogs,
   addMileageLog,
   updateVehicleReminders,
-  updateMileageLog,
+  deleteMileageLog
 };
