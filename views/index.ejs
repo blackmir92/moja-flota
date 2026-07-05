@@ -1059,6 +1059,77 @@ async function deleteLog(logId) {
         alert('Nie udało się połączyć z serwerem. Sprawdź czy trasa /log/:id istnieje w app.js');
     }
 }
+// === LOGIKA MODALA Z DOKUMENTAMI ===
+
+function openDocsModal(logId) {
+    document.getElementById('uploadLogId').value = logId;
+    document.getElementById('docsModal').style.display = 'block';
+    loadDocs(logId);
+}
+
+function closeDocsModal() {
+    document.getElementById('docsModal').style.display = 'none';
+    document.getElementById('docFileInput').value = '';
+}
+
+async function loadDocs(logId) {
+    const list = document.getElementById('docsList');
+    list.innerHTML = '<li>Ładowanie...</li>';
+    try {
+        const res = await fetch(`/log/${logId}/documents`);
+        const docs = await res.json();
+        list.innerHTML = '';
+        if (docs.length === 0) {
+            list.innerHTML = '<li>Brak załączonych plików.</li>';
+        } else {
+            docs.forEach(doc => {
+                let icon = doc.original_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️';
+                list.innerHTML += `
+                  <li>
+                    <a href="/uploads/${doc.file_path}" target="_blank">${icon} ${doc.original_name}</a>
+                  </li>`;
+            });
+        }
+    } catch(err) {
+        list.innerHTML = '<li>Błąd ładowania z serwera.</li>';
+    }
+}
+
+// Obsługa wgrywania z modala
+document.getElementById('docUploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const logId = document.getElementById('uploadLogId').value;
+    const fileInput = document.getElementById('docFileInput');
+    
+    if (!fileInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('document', fileInput.files[0]);
+
+    const submitBtn = e.target.querySelector('button');
+    submitBtn.textContent = "⏳ Wgrywanie...";
+    submitBtn.disabled = true;
+
+    try {
+        const res = await fetch(`/log/${logId}/documents`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            fileInput.value = '';
+            loadDocs(logId); // Odśwież listę w oknie
+        } else {
+            alert('Błąd: ' + data.message);
+        }
+    } catch (err) {
+        alert('Wystąpił błąd podczas wgrywania.');
+    } finally {
+        submitBtn.textContent = "📤 Wgraj dokument";
+        submitBtn.disabled = false;
+    }
+});
   </script>
 
 <!-- Modal na dokumenty -->
