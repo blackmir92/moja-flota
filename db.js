@@ -43,6 +43,17 @@ async function initDB() {
         eventDate DATE
       )
     `);
+    // NOWY KOD: Tabela na dokumenty powiązane z historią
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS log_documents (
+        id SERIAL PRIMARY KEY,
+        log_id INTEGER REFERENCES mileage_logs(id) ON DELETE CASCADE,
+        original_name TEXT,
+        file_path TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     console.log("✅ Tabele sprawdzone/utworzone.");
   } catch (err) {
     console.error("❌ Błąd inicjalizacji bazy danych:", err.message);
@@ -196,7 +207,20 @@ async function deleteMileageLog(logId) {
     const query = 'DELETE FROM mileage_logs WHERE id = $1';
     await pool.query(query, [logId]);
 }
+/* =======================
+   DOCUMENTS
+======================= */
+function getLogDocuments(logId) {
+  return pool.query('SELECT * FROM log_documents WHERE log_id = $1 ORDER BY created_at DESC', [logId])
+    .then(res => res.rows);
+}
 
+function addLogDocument(logId, originalName, filePath) {
+  return pool.query(
+    'INSERT INTO log_documents (log_id, original_name, file_path) VALUES ($1, $2, $3) RETURNING *',
+    [logId, originalName, filePath]
+  ).then(res => res.rows[0]);
+}
 /* =======================
    ALIASY I EKSPORT
 ======================= */
@@ -214,5 +238,7 @@ module.exports = {
   getMileageLogs,
   addMileageLog,
   updateVehicleReminders,
-  deleteMileageLog
+  deleteMileageLog,
+  getLogDocuments,
+  addLogDocument
 };
