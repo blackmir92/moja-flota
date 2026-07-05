@@ -1053,6 +1053,23 @@ async function deleteLog(logId) {
     }
 }
   </script>
-  
+
+<!-- Modal na dokumenty -->
+<div id="docsModal" class="modal-overlay">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeDocsModal()">✖</button>
+    <h3 style="margin-top: 0;">📎 Załączniki do czynności</h3>
+    
+    <ul id="docsList" class="doc-list"></ul>
+    
+    <form id="docUploadForm" style="display:flex; flex-direction:column; gap:10px; margin-top: 10px; padding-top: 15px; border-top: 1px solid #eee;">
+      <input type="hidden" id="uploadLogId" name="logId" />
+      <input type="file" id="docFileInput" name="document" accept=".pdf,.jpg,.jpeg,.png" required style="padding: 8px;" />
+      <button type="submit" class="ios-green-btn" style="min-width:auto; padding: 10px; border-radius: 12px; margin-top: 0;">
+        📤 Wgraj dokument
+      </button>
+    </form>
+  </div>
+</div>
 </body>
 </html>
