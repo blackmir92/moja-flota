@@ -721,7 +721,7 @@ if (vehicleForm) {
 
 
 // Załaduj historię po wstawieniu HTML
-fetch(`/vehicle/${currentVehicleId}/mileage`)
+fetch(`/vehicle/${currentVehicleId}/mileage?t=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
     const tbody = document.querySelector('#mileageTable tbody');
