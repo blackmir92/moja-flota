@@ -1062,6 +1062,12 @@ async function deleteLog(logId) {
 // === LOGIKA MODALA Z DOKUMENTAMI ===
 
 function openDocsModal(logId) {
+    // Zabezpieczenie przed błędem "undefined"
+    if (!logId || logId === 'undefined') {
+        alert("Błąd: Ten wiersz nie ma przypisanego ID! Odśwież stronę (F5) lub zrestartuj serwer Node.js po zmianach w pliku db.js.");
+        return; 
+    }
+
     document.getElementById('uploadLogId').value = logId;
     document.getElementById('docsModal').style.display = 'block';
     loadDocs(logId);
