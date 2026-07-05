@@ -1095,9 +1095,10 @@ async function loadDocs(logId) {
     }
 }
 
-// Obsługa wgrywania z modala
-document.getElementById('docUploadForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+async function uploadDocument(event) {
+    // To jest kluczowe! Blokuje przeładowanie strony do strony głównej:
+    event.preventDefault(); 
+    
     const logId = document.getElementById('uploadLogId').value;
     const fileInput = document.getElementById('docFileInput');
     
@@ -1106,7 +1107,7 @@ document.getElementById('docUploadForm').addEventListener('submit', async (e) =>
     const formData = new FormData();
     formData.append('document', fileInput.files[0]);
 
-    const submitBtn = e.target.querySelector('button');
+    const submitBtn = event.target.querySelector('button');
     submitBtn.textContent = "⏳ Wgrywanie...";
     submitBtn.disabled = true;
 
@@ -1119,16 +1120,18 @@ document.getElementById('docUploadForm').addEventListener('submit', async (e) =>
         
         if (data.success) {
             fileInput.value = '';
-            loadDocs(logId); // Odśwież listę w oknie
+            loadDocs(logId); // Automatycznie odświeża listę w okienku
         } else {
-            alert('Błąd: ' + data.message);
+            alert('Błąd serwera: ' + data.message);
         }
     } catch (err) {
-        alert('Wystąpił błąd podczas wgrywania.');
+        console.error(err);
+        alert('Wystąpił błąd podczas wgrywania pliku.');
     } finally {
         submitBtn.textContent = "📤 Wgraj dokument";
         submitBtn.disabled = false;
     }
+}
 });
   </script>
 
@@ -1140,11 +1143,13 @@ document.getElementById('docUploadForm').addEventListener('submit', async (e) =>
     
     <ul id="docsList" class="doc-list"></ul>
     
-    <form id="docUploadForm" style="display:flex; flex-direction:column; gap:10px; margin-top: 10px; padding-top: 15px; border-top: 1px solid #eee;">
-      <input type="hidden" id="uploadLogId" name="logId" />
-      <input type="file" id="docFileInput" name="document" accept=".pdf,.jpg,.jpeg,.png" required style="padding: 8px;" />
-      <button type="submit" class="ios-green-btn" style="min-width:auto; padding: 10px; border-radius: 12px; margin-top: 0;">
-        📤 Wgraj dokument
+<form id="docUploadForm" onsubmit="uploadDocument(event)" style="display:flex; flex-direction:column; gap:10px; margin-top: 10px; padding-top: 15px; border-top: 1px solid #eee;">
+  <input type="hidden" id="uploadLogId" name="logId" />
+  <input type="file" id="docFileInput" name="document" accept=".pdf,.jpg,.jpeg,.png" required style="padding: 8px;" />
+  <button type="submit" class="ios-green-btn" style="min-width:auto; padding: 10px; border-radius: 12px; margin-top: 0;">
+    📤 Wgraj dokument
+  </button>
+</form>
       </button>
     </form>
   </div>
