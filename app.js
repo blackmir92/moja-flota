@@ -271,7 +271,34 @@ app.delete('/log/:id', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+// === DOKUMENTY HISTORII POJAZDU ===
 
+// Pobieranie listy załączników
+app.get('/log/:id/documents', async (req, res) => {
+  try {
+    const docs = await db.getLogDocuments(req.params.id);
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ error: "Błąd serwera" });
+  }
+});
+
+// Wgrywanie nowego załącznika
+app.post('/log/:id/documents', upload.single('document'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: "Brak pliku" });
+  
+  try {
+    const logId = req.params.id;
+    const filePath = req.file.filename;
+    const originalName = req.file.originalname;
+
+    await db.addLogDocument(logId, originalName, filePath);
+    res.json({ success: true, filePath, originalName });
+  } catch (err) {
+    console.error("Błąd zapisu dokumentu:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 
 // === EKSPORTY ===
